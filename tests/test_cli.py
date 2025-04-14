@@ -34,7 +34,7 @@ def test_workspace():
 def test_cli_help():
     """Test the CLI help command"""
     result = subprocess.run(
-        [sys.executable, "logseq_to_reflect_converter.py", "--help"],
+        [sys.executable, os.path.join("src", "logseq_to_reflect_converter.py"), "--help"],
         capture_output=True,
         text=True
     )
@@ -48,7 +48,7 @@ def test_cli_help():
 def test_cli_invalid_workspace():
     """Test the CLI with an invalid workspace"""
     result = subprocess.run(
-        [sys.executable, "logseq_to_reflect_converter.py", "--workspace", "nonexistent_dir"],
+        [sys.executable, os.path.join("src", "logseq_to_reflect_converter.py"), "--workspace", "nonexistent_dir"],
         capture_output=True,
         text=True
     )
@@ -62,7 +62,7 @@ def test_cli_dry_run(test_workspace):
     result = subprocess.run(
         [
             sys.executable, 
-            "logseq_to_reflect_converter.py", 
+            os.path.join("src", "logseq_to_reflect_converter.py"), 
             "--workspace", test_workspace,
             "--output-dir", output_dir,
             "--dry-run"

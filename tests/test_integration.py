@@ -55,7 +55,7 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):
     # Import the module containing the main function
     spec = importlib.util.spec_from_file_location(
         "converter", 
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "logseq_to_reflect_converter.py")
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "logseq_to_reflect_converter.py")
     )
     converter_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(converter_module)
@@ -128,7 +128,7 @@ def test_dry_run_mode(test_logseq_workspace, monkeypatch, capsys):
     # Import the module containing the main function
     spec = importlib.util.spec_from_file_location(
         "converter", 
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "logseq_to_reflect_converter.py")
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "logseq_to_reflect_converter.py")
     )
     converter_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(converter_module)
