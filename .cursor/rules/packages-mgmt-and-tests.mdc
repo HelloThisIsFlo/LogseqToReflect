@@ -16,6 +16,7 @@ alwaysApply: true
 - Write tests for each new feature
 - The tests are under the `tests` directory
 - When writing tests always write them in `pytest` style, never `unittest` style
+- Always run all unit-tests at once (with `uv run pytest`) instead of individual ones. This helps you identify breaking changes early
 
 
 # Project

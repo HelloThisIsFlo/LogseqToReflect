@@ -169,12 +169,20 @@ class TestPageTitleProcessor:
 class TestIndentedBulletPointsProcessor:
     """Tests for the IndentedBulletPointsProcessor class"""
     
-    def test_remove_tabs_from_bullet_points(self):
+    def test_remove_tabs_from_top_level_bullet_points(self):
         processor = IndentedBulletPointsProcessor()
         content = "## [[Project Status]]\n\t- Working on [[Feature X]] with [[John Doe]]\n\t- Need to check reference\n\t- Also see [[page/documentation]]"
         new_content, changed = processor.process(content)
         assert changed is True
         assert "## [[Project Status]]\n- Working on [[Feature X]] with [[John Doe]]\n- Need to check reference\n- Also see [[page/documentation]]" == new_content
+    
+    def test_preserve_hierarchy_for_nested_bullet_points(self):
+        processor = IndentedBulletPointsProcessor()
+        content = "## [[Framework]]\n\t- [[Framework]] is a framework for interfaces\n\t\t- It's a middleware service\n\t\t- It generates interfaces\n\t\t\t- Generates code\n\t- All components use this"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        expected = "## [[Framework]]\n- [[Framework]] is a framework for interfaces\n\t- It's a middleware service\n\t- It generates interfaces\n\t\t- Generates code\n- All components use this"
+        assert expected == new_content
     
     def test_no_change_when_no_indented_bullets(self):
         processor = IndentedBulletPointsProcessor()
@@ -183,9 +191,10 @@ class TestIndentedBulletPointsProcessor:
         assert changed is False
         assert content == new_content
     
-    def test_mixed_indented_and_regular_bullets(self):
+    def test_multiple_hierarchical_sections(self):
         processor = IndentedBulletPointsProcessor()
-        content = "## Mixed content\n- Regular bullet\n\t- Indented bullet\n- Another regular bullet"
+        content = "## First Section\n\t- Top level bullet\n\t\t- Second level\n\t\t\t- Third level\n\n## Second Section\n\t- Another top bullet\n\t\t- Nested bullet"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "## Mixed content\n- Regular bullet\n- Indented bullet\n- Another regular bullet" == new_content 
+        expected = "## First Section\n- Top level bullet\n\t- Second level\n\t\t- Third level\n\n## Second Section\n- Another top bullet\n\t- Nested bullet"
+        assert expected == new_content 
