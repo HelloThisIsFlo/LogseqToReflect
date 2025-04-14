@@ -318,6 +318,107 @@ class PageTitleProcessor(ContentProcessor):
         
         return new_content, new_content != content
 
+class WikiLinkProcessor(ContentProcessor):
+    """Process wikilinks using the same formatting rules as page titles"""
+    
+    def __init__(self):
+        # Words that should be lowercase in title case
+        self.lowercase_words = {
+            'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 
+            'as', 'at', 'by', 'for', 'from', 'in', 'into', 
+            'near', 'of', 'on', 'onto', 'to', 'with'
+        }
+    
+    def _title_case(self, text):
+        """Apply proper title case to text"""
+        words = text.split()
+        
+        # Handle empty strings
+        if not words:
+            return ""
+        
+        # Always capitalize first and last word
+        result = [words[0].capitalize()]
+        
+        # Apply rules to middle words
+        for word in words[1:-1] if len(words) > 1 else []:
+            if word.lower() in self.lowercase_words:
+                result.append(word.lower())
+            else:
+                result.append(word.capitalize())
+        
+        # Add last word if it exists (and it's not the only word)
+        if len(words) > 1:
+            result.append(words[-1].capitalize())
+        
+        return ' '.join(result)
+    
+    def _capitalize_with_slash_rules(self, text):
+        """Apply capitalization rules, handling slash-separated text specially"""
+        if '/' in text:
+            parts = text.split('/')
+            # Capitalize only the last part after applying title case to it
+            # Note: We don't replace underscores with spaces for wikilinks
+            last_part_words = last_part = parts[-1].split(' ')
+            last_part_title_cased = []
+            
+            # Apply title case to the last part, word by word
+            if last_part_words:
+                # First word is always capitalized
+                last_part_title_cased.append(last_part_words[0].capitalize())
+                
+                # Middle words follow lowercase word rules
+                for word in last_part_words[1:-1] if len(last_part_words) > 1 else []:
+                    if word.lower() in self.lowercase_words:
+                        last_part_title_cased.append(word.lower())
+                    else:
+                        last_part_title_cased.append(word.capitalize())
+                
+                # Last word is always capitalized
+                if len(last_part_words) > 1:
+                    last_part_title_cased.append(last_part_words[-1].capitalize())
+            
+            formatted_last_part = ' '.join(last_part_title_cased)
+            
+            # Keep paths lowercase, capitalize only the last part
+            parts = [p.lower() for p in parts[:-1]] + [formatted_last_part]
+            return '/'.join(parts)
+        else:
+            # For regular text (no slashes), apply title case
+            # Split by spaces for title casing but preserve underscores
+            words = text.split(' ')
+            
+            # Handle empty strings
+            if not words:
+                return ""
+            
+            # Always capitalize first and last word
+            result = [words[0].capitalize()]
+            
+            # Apply rules to middle words
+            for word in words[1:-1] if len(words) > 1 else []:
+                if word.lower() in self.lowercase_words:
+                    result.append(word.lower())
+                else:
+                    result.append(word.capitalize())
+            
+            # Add last word if it exists (and it's not the only word)
+            if len(words) > 1:
+                result.append(words[-1].capitalize())
+            
+            return ' '.join(result)
+    
+    def _format_wikilink(self, match):
+        """Format the wikilink content according to the rules"""
+        link_text = match.group(1)
+        formatted_text = self._capitalize_with_slash_rules(link_text)
+        return f"[[{formatted_text}]]"
+    
+    def process(self, content):
+        # Find all wikilinks and format them
+        new_content = re.sub(r'\[\[(.*?)\]\]', self._format_wikilink, content)
+        return new_content, new_content != content
+
 class FileProcessor:
     """Base class for file processors"""
     
@@ -377,7 +478,8 @@ class JournalFileProcessor(FileProcessor):
             LinkProcessor(),
             BlockReferencesCleaner(),
             EmptyContentCleaner(),
-            IndentedBulletPointsProcessor()
+            IndentedBulletPointsProcessor(),
+            WikiLinkProcessor()
         ]
     
     def extract_date_from_filename(self, filename):
@@ -457,7 +559,8 @@ class PageFileProcessor(FileProcessor):
             LinkProcessor(),
             BlockReferencesCleaner(),
             EmptyContentCleaner(),
-            IndentedBulletPointsProcessor()
+            IndentedBulletPointsProcessor(),
+            WikiLinkProcessor()
         ]
     
     def process_file(self, file_path, output_path):

@@ -7,7 +7,8 @@ from src.logseq_to_reflect_converter import (
     BlockReferencesCleaner, 
     PageTitleProcessor,
     IndentedBulletPointsProcessor,
-    EmptyContentCleaner
+    EmptyContentCleaner,
+    WikiLinkProcessor
 )
 
 class TestDateHeaderProcessor:
@@ -230,4 +231,49 @@ class TestIndentedBulletPointsProcessor:
         new_content, changed = processor.process(content)
         assert changed is True
         expected = "## First Section\n- Top level bullet\n\t- Second level\n\t\t- Third level\n\n## Second Section\n- Another top bullet\n\t- Nested bullet"
-        assert expected == new_content 
+        assert expected == new_content
+
+class TestWikiLinkProcessor:
+    """Tests for the WikiLinkProcessor class"""
+    
+    def test_format_simple_wikilinks(self):
+        processor = WikiLinkProcessor()
+        content = "Text with [[simple link]] in the middle"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "Text with [[Simple Link]] in the middle" == new_content
+    
+    def test_format_wikilinks_with_underscores(self):
+        processor = WikiLinkProcessor()
+        content = "Check out [[my_awesome_page]] for more info"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "Check out [[My_awesome_page]] for more info" == new_content
+    
+    def test_format_wikilinks_with_slashes(self):
+        processor = WikiLinkProcessor()
+        content = "Looking at [[aws/iam/group in space]] documentation"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "Looking at [[aws/iam/Group in Space]] documentation" == new_content
+    
+    def test_title_case_rules_in_wikilinks(self):
+        processor = WikiLinkProcessor()
+        content = "See [[the importance of a good title]] page"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "See [[The Importance of a Good Title]] page" == new_content
+    
+    def test_multiple_wikilinks_in_content(self):
+        processor = WikiLinkProcessor()
+        content = "- [[first_link]]\n- [[second/third/important_document]]\n- [[the quick brown fox]]"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "- [[First_link]]\n- [[second/third/Important_document]]\n- [[The Quick Brown Fox]]" == new_content
+    
+    def test_no_change_when_no_wikilinks(self):
+        processor = WikiLinkProcessor()
+        content = "Regular text without wikilinks"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert content == new_content 

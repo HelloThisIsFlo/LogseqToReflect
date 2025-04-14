@@ -23,6 +23,9 @@ alwaysApply: true
   - `tests/full_test_workspace`
   - `full_test_workspace (Reflect format)`
 - If you need to experiment with extra tricky cases, feel free to edit or add files in `tests/full_test_workspace`
+- Do not write test markdown files anywhere else! Add the use cases you want to test either: 
+  1. In a unit test
+  2. In a MD file under `tests/full_test_workspace` (for instance, like [2025-02-15.md](mdc:tests/full_test_workspace (Reflect format)/journals/2025-02-15.md))
 
 # Project
 - This is a LogSeq to Reflect converter (LogSeq and Reflect are both note-taking apps)
