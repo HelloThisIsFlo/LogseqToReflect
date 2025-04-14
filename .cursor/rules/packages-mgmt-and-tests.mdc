@@ -4,10 +4,20 @@ globs:
 alwaysApply: true
 ---
 
-- When writing tests always write them in `pytest` style, never `unittest` style
+# Package management
 - All packages are installed via `uv`, not `pip` or anything else.
 - In most cases you don't need to install any package, it's already taken care of
 - You need to use the `uv` command to run things, for instance:
   - Run tests: `uv run pytest`
   - Run a script: `uv run python -m ....`
 - If you _do_ need to install a new package, use: `uv add <package_name>`, never use `pip ..` and never use `uv run pip ...`
+
+# Tests
+- Write tests for each new feature
+- The tests are under the `tests` directory
+- When writing tests always write them in `pytest` style, never `unittest` style
+
+
+# Project
+- This is a LogSeq to Reflect converter (LogSeq and Reflect are both note-taking apps)
+- It converts LogSeq files into a format that's easy to import in Reflect
