@@ -43,10 +43,10 @@ class TestJournalFileProcessor:
     def test_get_processors(self):
         processor = JournalFileProcessor()
         processors = processor.get_processors()
-        assert len(processors) == 3
+        assert len(processors) == 4
         # Check processor types without being too strict about order
         processor_types = {type(p).__name__ for p in processors}
-        assert processor_types == {'TaskCleaner', 'LinkProcessor', 'BlockReferencesCleaner'}
+        assert processor_types == {'TaskCleaner', 'LinkProcessor', 'BlockReferencesCleaner', 'IndentedBulletPointsProcessor'}
     
     def test_extract_date_from_filename_valid(self):
         processor = JournalFileProcessor()
@@ -102,10 +102,10 @@ class TestPageFileProcessor:
     def test_get_processors(self):
         processor = PageFileProcessor()
         processors = processor.get_processors()
-        assert len(processors) == 3
+        assert len(processors) == 4
         # Check processor types without being too strict about order
         processor_types = {type(p).__name__ for p in processors}
-        assert processor_types == {'TaskCleaner', 'LinkProcessor', 'BlockReferencesCleaner'}
+        assert processor_types == {'TaskCleaner', 'LinkProcessor', 'BlockReferencesCleaner', 'IndentedBulletPointsProcessor'}
     
     def test_process_file(self, temp_dir):
         # Create a test file

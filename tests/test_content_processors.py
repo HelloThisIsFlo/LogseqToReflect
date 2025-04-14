@@ -5,7 +5,8 @@ from src.logseq_to_reflect_converter import (
     TaskCleaner, 
     LinkProcessor, 
     BlockReferencesCleaner, 
-    PageTitleProcessor
+    PageTitleProcessor,
+    IndentedBulletPointsProcessor
 )
 
 class TestDateHeaderProcessor:
@@ -163,4 +164,28 @@ class TestPageTitleProcessor:
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# New Page\n")
-        assert "Old Title" not in new_content 
+        assert "Old Title" not in new_content
+
+class TestIndentedBulletPointsProcessor:
+    """Tests for the IndentedBulletPointsProcessor class"""
+    
+    def test_remove_tabs_from_bullet_points(self):
+        processor = IndentedBulletPointsProcessor()
+        content = "## [[Project Status]]\n\t- Working on [[Feature X]] with [[John Doe]]\n\t- Need to check reference\n\t- Also see [[page/documentation]]"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "## [[Project Status]]\n- Working on [[Feature X]] with [[John Doe]]\n- Need to check reference\n- Also see [[page/documentation]]" == new_content
+    
+    def test_no_change_when_no_indented_bullets(self):
+        processor = IndentedBulletPointsProcessor()
+        content = "## Regular heading\n- Regular bullet point\n- Another bullet point"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert content == new_content
+    
+    def test_mixed_indented_and_regular_bullets(self):
+        processor = IndentedBulletPointsProcessor()
+        content = "## Mixed content\n- Regular bullet\n\t- Indented bullet\n- Another regular bullet"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "## Mixed content\n- Regular bullet\n- Indented bullet\n- Another regular bullet" == new_content 

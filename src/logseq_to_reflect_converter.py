@@ -110,6 +110,16 @@ class BlockReferencesCleaner(ContentProcessor):
         
         return new_content, new_content != content
 
+class IndentedBulletPointsProcessor(ContentProcessor):
+    """Process indented bullet points with tabs and convert them to normal bullet points"""
+    
+    def process(self, content):
+        # Replace tabs at the beginning of bullet point lines
+        # This regex matches lines starting with tab(s) followed by a dash and a space
+        new_content = re.sub(r'^\t+- ', '- ', content, flags=re.MULTILINE)
+        
+        return new_content, new_content != content
+
 class PageTitleProcessor(ContentProcessor):
     """Process page titles according to the specified rules"""
     
@@ -274,7 +284,8 @@ class JournalFileProcessor(FileProcessor):
         return [
             TaskCleaner(),
             LinkProcessor(),
-            BlockReferencesCleaner()
+            BlockReferencesCleaner(),
+            IndentedBulletPointsProcessor()
         ]
     
     def extract_date_from_filename(self, filename):
@@ -352,7 +363,8 @@ class PageFileProcessor(FileProcessor):
         return [
             TaskCleaner(),
             LinkProcessor(),
-            BlockReferencesCleaner()
+            BlockReferencesCleaner(),
+            IndentedBulletPointsProcessor()
         ]
     
     def process_file(self, file_path, output_path):
