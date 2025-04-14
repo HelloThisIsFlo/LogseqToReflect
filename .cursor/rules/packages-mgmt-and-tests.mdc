@@ -18,6 +18,11 @@ alwaysApply: true
 - When writing tests always write them in `pytest` style, never `unittest` style
 - Always run all unit-tests at once (with `uv run pytest`) instead of individual ones. This helps you identify breaking changes early
 
+# Manual Checking
+- If you want to check the output of your changes, simply run the tests and compare:
+  - `tests/full_test_workspace`
+  - `full_test_workspace (Reflect format)`
+- If you need to experiment with extra tricky cases, feel free to edit or add files in `tests/full_test_workspace`
 
 # Project
 - This is a LogSeq to Reflect converter (LogSeq and Reflect are both note-taking apps)

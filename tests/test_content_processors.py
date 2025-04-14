@@ -6,7 +6,8 @@ from src.logseq_to_reflect_converter import (
     LinkProcessor, 
     BlockReferencesCleaner, 
     PageTitleProcessor,
-    IndentedBulletPointsProcessor
+    IndentedBulletPointsProcessor,
+    EmptyContentCleaner
 )
 
 class TestDateHeaderProcessor:
@@ -115,6 +116,38 @@ class TestBlockReferencesCleaner:
     def test_no_change_when_no_blocks(self):
         processor = BlockReferencesCleaner()
         content = "Regular text without blocks"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert content == new_content
+
+class TestEmptyContentCleaner:
+    """Tests for the EmptyContentCleaner class"""
+    
+    def test_remove_empty_bullet_points(self):
+        processor = EmptyContentCleaner()
+        content = "## Section\n- First item\n- \n- Third item"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "- \n" not in new_content
+        assert "## Section\n- First item\n- Third item" == new_content
+    
+    def test_remove_empty_lines_after_tasks(self):
+        processor = EmptyContentCleaner()
+        content = "## Tasks\n- [ ] First task\n\n- [x] Second task\n\n## Another Section"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "## Tasks\n- [ ] First task\n- [x] Second task\n\n## Another Section" == new_content
+    
+    def test_preserve_empty_lines_before_headings(self):
+        processor = EmptyContentCleaner()
+        content = "## First Section\n- [ ] Task 1\n\n## Second Section"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert content == new_content
+    
+    def test_preserve_other_empty_lines(self):
+        processor = EmptyContentCleaner()
+        content = "## First Section\n\n## Second Section"
         new_content, changed = processor.process(content)
         assert changed is False
         assert content == new_content
