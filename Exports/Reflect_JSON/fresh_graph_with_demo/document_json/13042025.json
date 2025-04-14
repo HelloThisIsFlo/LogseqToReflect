@@ -1,0 +1,592 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 1
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Sun, April 13th, 2025"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "attrs": {
+        "kind": "bullet",
+        "checked": false,
+        "collapsed": false,
+        "guid": "5c700269-1708-42d7-8da6-7fd1600358de",
+        "archived": false
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Today I started using "
+            },
+            {
+              "type": "backlink",
+              "attrs": {
+                "id": "reflect",
+                "label": "Reflect",
+                "graphId": "the-sandbox"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "attrs": {
+        "kind": "bullet",
+        "checked": false,
+        "collapsed": false,
+        "guid": "e6f9988c-cd66-4310-aa44-3e7a393732f1",
+        "archived": false
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "How should I use "
+            },
+            {
+              "type": "backlink",
+              "attrs": {
+                "id": "reflect",
+                "label": "Reflect",
+                "graphId": "the-sandbox"
+              }
+            },
+            {
+              "type": "text",
+              "text": "?"
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "bullet",
+            "checked": false,
+            "collapsed": false,
+            "guid": "a3594a66-1e8f-40a9-9427-cbe8fc84a670",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Record everything that happens in your day from your daily note (in a list just like this!)"
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "attrs": {
+                "kind": "bullet",
+                "checked": false,
+                "collapsed": false,
+                "guid": "7141b510-c1cf-4cb9-8ea1-fd5fb5abdea5",
+                "archived": false
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Write to do lists and items, a running log of what happens in your day, people you meet, ideas, daily reflections, etc."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "attrs": {
+                "kind": "bullet",
+                "checked": false,
+                "collapsed": false,
+                "guid": "3ac9177b-8f4b-4e95-9e30-c2723769b65b",
+                "archived": false
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "You can watch workflow videos showing how to use Reflect on our "
+                    },
+                    {
+                      "type": "text",
+                      "text": "YouTube page",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "https://www.youtube.com/@reflect-notes",
+                            "target": null,
+                            "auto": false
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "attrs": {
+                "kind": "bullet",
+                "checked": false,
+                "collapsed": false,
+                "guid": "cc3ca73a-3580-4187-9576-1801a5e78a46",
+                "archived": false
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "We've created a note for you on "
+                    },
+                    {
+                      "type": "backlink",
+                      "attrs": {
+                        "id": "how-to-use-reflect",
+                        "label": "How to use Reflect",
+                        "graphId": "the-sandbox"
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "text": " in case you need to reference it at any time."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "bullet",
+            "checked": false,
+            "collapsed": false,
+            "guid": "3eb20e41-cb4c-4a0f-85e5-583b45e5d606",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Use AI to organize your notes"
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "attrs": {
+                "kind": "bullet",
+                "checked": false,
+                "collapsed": false,
+                "guid": "2e4b2ffc-c589-4b82-93a5-e07e3f4f05a5",
+                "archived": false
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Pull up the AI palette editor using "
+                    },
+                    {
+                      "type": "text",
+                      "text": "cmd J",
+                      "marks": [
+                        {
+                          "type": "bold",
+                          "attrs": {}
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "list",
+              "attrs": {
+                "kind": "bullet",
+                "checked": false,
+                "collapsed": false,
+                "guid": "6d1549ad-d842-4c4c-9a9e-e9e0f18433ef",
+                "archived": false
+              },
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Chat with your notes with AI through our advanced search ("
+                    },
+                    {
+                      "type": "text",
+                      "text": "cmd K",
+                      "marks": [
+                        {
+                          "type": "bold",
+                          "attrs": {}
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "text": ")"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "bullet",
+            "checked": false,
+            "collapsed": false,
+            "guid": "b0aa83c1-3120-4724-8029-2de32b4a316c",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "If you're not yet familiar, learn about "
+                },
+                {
+                  "type": "text",
+                  "text": "how to use backlinks",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.academy/linking-your-notes",
+                        "target": null,
+                        "auto": false
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "attrs": {
+        "kind": "bullet",
+        "checked": false,
+        "collapsed": false,
+        "guid": "5bc90863-8a32-4366-a54b-8cf2ab9448d6",
+        "archived": false
+      },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Today’s Task List"
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "73d3e335-4e92-4b22-8f1f-3a9516b80691",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Sync your "
+                },
+                {
+                  "type": "text",
+                  "text": "calendar and contacts",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.app/preferences/credentials",
+                        "target": null,
+                        "auto": false
+                      }
+                    },
+                    {
+                      "type": "underline",
+                      "attrs": {}
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " (for easy meeting imports)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "723784f6-992c-49db-b9a4-89513758f586",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Install the "
+                },
+                {
+                  "type": "text",
+                  "text": "Desktop and iOS apps",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.app/download",
+                        "target": null,
+                        "auto": false
+                      }
+                    },
+                    {
+                      "type": "underline",
+                      "attrs": {}
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " (better experience)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "b366d517-c50c-4915-841a-c6782d3df11a",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Download our "
+                },
+                {
+                  "type": "text",
+                  "text": "Chrome and Safari extensions",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.app/download",
+                        "target": null,
+                        "auto": false
+                      }
+                    },
+                    {
+                      "type": "underline",
+                      "attrs": {}
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " (to save things from the web)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "3c3a5ba6-da00-4237-8565-3c4fbb2d992a",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Import any existing notes",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.academy/import-export-backups",
+                        "target": null,
+                        "auto": false
+                      }
+                    },
+                    {
+                      "type": "underline",
+                      "attrs": {}
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " you have (from tools like Roam, Evernote, Apple Notes, etc.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "b39db560-9343-4590-9e2f-4bd4476a2071",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Join our "
+                },
+                {
+                  "type": "text",
+                  "text": "Discord community",
+                  "marks": [
+                    {
+                      "type": "link",
+                      "attrs": {
+                        "href": "https://reflect.app/discord",
+                        "target": null,
+                        "auto": false
+                      }
+                    },
+                    {
+                      "type": "underline",
+                      "attrs": {}
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " (ask questions, share your workflows, product updates, etc.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "988b5720-763c-416b-9c34-858c29b987e8",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Write down the rest of your to-do items for the day in this list"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "attrs": {
+            "kind": "checklist",
+            "checked": false,
+            "collapsed": false,
+            "guid": "72fbfd8e-823d-4a14-9f9b-ee8121eca267",
+            "archived": false
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Transcribe your first audio note"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "attrs": {
+    "version": 6.1
+  }
+}
