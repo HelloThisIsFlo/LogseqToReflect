@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 import importlib.util
 import re
+import subprocess
 
 
 @pytest.fixture
@@ -46,6 +47,17 @@ def test_logseq_workspace():
 
     # Clean up
     shutil.rmtree(temp_dir)
+
+
+def run_cli(args):
+    env = os.environ.copy()
+    env['PYTHONPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+    return subprocess.run(
+        [sys.executable, '-m', 'src.logseq_to_reflect_converter'] + args,
+        capture_output=True,
+        text=True,
+        env=env
+    )
 
 
 def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):

@@ -2,8 +2,7 @@ import pytest
 import os
 import tempfile
 import shutil
-import re
-from src.logseq_to_reflect_converter import LogSeqToReflectConverter
+from src.file_handlers.logseq_to_reflect_converter import LogSeqToReflectConverter
 
 
 @pytest.fixture

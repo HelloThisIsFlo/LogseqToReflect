@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 import shutil
-from src.logseq_to_reflect_converter import DirectoryWalker
+from src.file_handlers.directory_walker import DirectoryWalker
 
 
 @pytest.fixture

@@ -2,11 +2,9 @@ import pytest
 import os
 import tempfile
 import shutil
-from src.logseq_to_reflect_converter import (
-    FileProcessor,
-    JournalFileProcessor,
-    PageFileProcessor,
-)
+from src.file_handlers.file_processor import FileProcessor
+from src.file_handlers.journal_file_processor import JournalFileProcessor
+from src.file_handlers.page_file_processor import PageFileProcessor
 
 
 @pytest.fixture

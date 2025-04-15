@@ -1,16 +1,13 @@
 import pytest
-from src.logseq_to_reflect_converter import (
-    ContentProcessor,
-    DateHeaderProcessor,
-    TaskCleaner,
-    LinkProcessor,
-    BlockReferencesCleaner,
-    BlockReferencesReplacer,
-    PageTitleProcessor,
-    IndentedBulletPointsProcessor,
-    EmptyContentCleaner,
-    WikiLinkProcessor,
-)
+from src.processors.base import ContentProcessor
+from src.processors.date_header import DateHeaderProcessor
+from src.processors.task_cleaner import TaskCleaner
+from src.processors.link_processor import LinkProcessor
+from src.processors.block_references import BlockReferencesCleaner, BlockReferencesReplacer
+from src.processors.page_title import PageTitleProcessor
+from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
+from src.processors.empty_content_cleaner import EmptyContentCleaner
+from src.processors.wikilink import WikiLinkProcessor
 
 
 class TestDateHeaderProcessor:
