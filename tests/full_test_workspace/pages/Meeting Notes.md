@@ -16,6 +16,9 @@ collapsed:: false
 - Action items:
   - TODO Update roadmap document
     id:: 3c45d2f-639d-5942-c170-ee7f9e9e5432
+    - TODO Find where the document is stored
+    - TODO Adjust date
+    - TODO Share link with the team
   - TODO Schedule one-on-one meetings with team members
   - DONE Share meeting minutes with stakeholders
 
@@ -23,6 +26,7 @@ collapsed:: false
 - Main points:
   - Need to refactor [[database]] schema
   - Discussed migration to [[microservices]]
+    - {{embed ((3c45d2f-639d-5942-c170-ee7f9e9e5432))}}
   - Evaluated [[cloud providers]]
 
 - Decisions:
