@@ -1,6 +1,7 @@
 from typing import List
 from .base import ContentProcessor
 
+
 class ProcessorPipeline:
     def __init__(self, processors: List[ContentProcessor]):
         self.processors = processors

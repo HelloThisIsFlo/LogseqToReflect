@@ -51,12 +51,14 @@ def test_logseq_workspace():
 
 def run_cli(args):
     env = os.environ.copy()
-    env['PYTHONPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+    env["PYTHONPATH"] = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "src")
+    )
     return subprocess.run(
-        [sys.executable, '-m', 'src.logseq_to_reflect_converter'] + args,
+        [sys.executable, "-m", "src.logseq_to_reflect_converter"] + args,
         capture_output=True,
         text=True,
-        env=env
+        env=env,
     )
 
 

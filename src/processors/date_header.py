@@ -1,6 +1,7 @@
 from ..utils import DateFormatter
 from .base import ContentProcessor
 
+
 class DateHeaderProcessor(ContentProcessor):
     """Add a date header to the content"""
 

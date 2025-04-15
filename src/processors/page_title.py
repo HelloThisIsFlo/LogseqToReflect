@@ -2,13 +2,35 @@ from .base import ContentProcessor
 import os
 import re
 
+
 class PageTitleProcessor(ContentProcessor):
     """Process page titles according to the specified rules"""
+
     def __init__(self, filename):
         self.filename = filename
         # Words that should be lowercase in title case
         self.lowercase_words = {
-            "a", "an", "the", "and", "but", "or", "for", "nor", "as", "at", "by", "for", "from", "in", "into", "near", "of", "on", "onto", "to", "with",
+            "a",
+            "an",
+            "the",
+            "and",
+            "but",
+            "or",
+            "for",
+            "nor",
+            "as",
+            "at",
+            "by",
+            "for",
+            "from",
+            "in",
+            "into",
+            "near",
+            "of",
+            "on",
+            "onto",
+            "to",
+            "with",
         }
 
     def _title_case(self, text):

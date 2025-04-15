@@ -10,39 +10,47 @@ from ..processors import (
     PageTitleProcessor,
     WikiLinkProcessor,
 )
+from typing import Optional
+
 
 class PageFileProcessor(FileProcessor):
     """Process page files with task formatting and link preservation"""
-    def __init__(self, dry_run=False):
-        super().__init__(dry_run)
-        self.block_references_replacer = None
 
-    def get_processors(self):
+    def __init__(
+        self,
+        block_references_replacer: Optional[BlockReferencesReplacer] = None,
+        dry_run: bool = False,
+    ):
+        self.block_references_replacer = block_references_replacer
         processors = [LinkProcessor()]
         if self.block_references_replacer:
             processors.append(self.block_references_replacer)
         else:
             processors.append(BlockReferencesCleaner())
-        processors.extend([
-            TaskCleaner(),
-            EmptyContentCleaner(),
-            IndentedBulletPointsProcessor(),
-            WikiLinkProcessor(),
-        ])
-        return processors
+        processors.extend(
+            [
+                TaskCleaner(),
+                EmptyContentCleaner(),
+                IndentedBulletPointsProcessor(),
+                WikiLinkProcessor(),
+            ]
+        )
+        super().__init__(processors, dry_run)
 
-    def process_file(self, file_path, output_path):
+    def process_file(self, file_path: str, output_path: str) -> tuple[bool, bool]:
+        """
+        Process a page file, add a page title, and write the result to output_path.
+        Returns:
+            Tuple of (content_changed, success)
+        """
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            processors = self.get_processors()
             # Add PageTitleProcessor with the correct filename at the start
-            processors.insert(0, PageTitleProcessor(os.path.basename(file_path)))
-            content_changed = False
-            for processor in processors:
-                content, changed = processor.process(content)
-                if changed:
-                    content_changed = True
+            title_processor = PageTitleProcessor(os.path.basename(file_path))
+            new_content, content_changed = title_processor.process(content)
+            new_content, changed = self.pipeline.process(new_content)
+            content_changed = content_changed or changed
             if self.dry_run:
                 if content_changed:
                     print(f"Would update content in {file_path}")
@@ -51,7 +59,7 @@ class PageFileProcessor(FileProcessor):
             else:
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 with open(output_path, "w", encoding="utf-8") as f:
-                    f.write(content)
+                    f.write(new_content)
                 return content_changed, True
         except Exception as e:
             print(f"Error processing {file_path}: {e}")

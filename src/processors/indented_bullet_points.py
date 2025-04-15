@@ -1,5 +1,6 @@
 from .base import ContentProcessor
 
+
 class IndentedBulletPointsProcessor(ContentProcessor):
     """
     Process indented bullet points with tabs and convert them to a format compatible with Reflect.
@@ -8,6 +9,7 @@ class IndentedBulletPointsProcessor(ContentProcessor):
     2. Preserves the hierarchical structure of nested bullet points
     3. Ensures proper indentation levels are maintained throughout bullet hierarchies
     """
+
     def process(self, content):
         lines = content.split("\n")
         new_lines = []

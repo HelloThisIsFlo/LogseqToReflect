@@ -1,6 +1,7 @@
 from .base import ContentProcessor
 import re
 
+
 class TaskCleaner(ContentProcessor):
     """Clean up tasks in LogSeq format for Reflect"""
 

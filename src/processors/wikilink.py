@@ -1,11 +1,33 @@
 from .base import ContentProcessor
 import re
 
+
 class WikiLinkProcessor(ContentProcessor):
     """Process wikilinks using the same formatting rules as page titles"""
+
     def __init__(self):
         self.lowercase_words = {
-            "a", "an", "the", "and", "but", "or", "for", "nor", "as", "at", "by", "for", "from", "in", "into", "near", "of", "on", "onto", "to", "with",
+            "a",
+            "an",
+            "the",
+            "and",
+            "but",
+            "or",
+            "for",
+            "nor",
+            "as",
+            "at",
+            "by",
+            "for",
+            "from",
+            "in",
+            "into",
+            "near",
+            "of",
+            "on",
+            "onto",
+            "to",
+            "with",
         }
 
     def _title_case(self, text):

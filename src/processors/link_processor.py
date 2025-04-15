@@ -1,6 +1,7 @@
 from .base import ContentProcessor
 import re
 
+
 class LinkProcessor(ContentProcessor):
     """Process LogSeq links for Reflect compatibility"""
 

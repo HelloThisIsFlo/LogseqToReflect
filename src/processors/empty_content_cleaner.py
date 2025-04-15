@@ -1,8 +1,10 @@
 from .base import ContentProcessor
 import re
 
+
 class EmptyContentCleaner(ContentProcessor):
     """Clean up empty lines and empty bullet points left after content removal"""
+
     def process(self, content):
         lines = content.split("\n")
         new_lines = []

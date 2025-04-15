@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class ContentProcessor(ABC):
     """Base class for content processors"""
 

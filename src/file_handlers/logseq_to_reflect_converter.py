@@ -2,29 +2,34 @@ import os
 from .directory_walker import DirectoryWalker
 from ..processors.block_references import BlockReferencesReplacer
 
+
 class LogSeqToReflectConverter:
     """Main converter class to convert LogSeq files to Reflect format"""
-    def __init__(self, workspace, output_dir=None, dry_run=False):
+
+    def __init__(self, workspace: str, output_dir: str = None, dry_run: bool = False):
         self.workspace = os.path.abspath(workspace)
         if output_dir is None:
             workspace_name = os.path.basename(workspace)
             parent_dir = os.path.dirname(workspace)
-            self.output_dir = os.path.join(parent_dir, f"{workspace_name} (Reflect format)")
+            self.output_dir = os.path.join(
+                parent_dir, f"{workspace_name} (Reflect format)"
+            )
         else:
             self.output_dir = os.path.abspath(output_dir)
         self.dry_run = dry_run
         self.block_references_replacer = BlockReferencesReplacer()
-        self.walker = DirectoryWalker(workspace, self.output_dir, dry_run)
+        self.walker = DirectoryWalker(
+            workspace, self.output_dir, dry_run, self.block_references_replacer
+        )
 
-    def run(self):
+    def run(self) -> None:
+        """Run the conversion process for the LogSeq workspace."""
         print(f"Converting LogSeq workspace: {self.workspace}")
         print(f"Output directory: {self.output_dir}")
         print(f"Dry run: {self.dry_run}")
         if not self.dry_run:
             os.makedirs(self.output_dir, exist_ok=True)
         self.block_references_replacer.collect_blocks(self.workspace)
-        self.walker.journal_processor.block_references_replacer = self.block_references_replacer
-        self.walker.page_processor.block_references_replacer = self.block_references_replacer
         journals_dirs = self.walker.find_directories("journals")
         pages_dirs = self.walker.find_directories("pages")
         if journals_dirs:
@@ -57,8 +62,10 @@ class LogSeqToReflectConverter:
         print(f"  Total files processed: {total_files}")
         print(f"  Total files with changes: {total_changes}")
 
+
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(
         description="Convert LogSeq files for use in Reflect."
     )
@@ -86,5 +93,6 @@ def main():
     converter.run()
     if args.dry_run:
         print("\nRun without --dry-run to apply these changes.")
+
 
 __all__ = ["main"]

@@ -1,9 +1,13 @@
 from .base import ContentProcessor
 import re
 import os
+from ..utils import find_markdown_files
+from typing import Dict, Tuple
+
 
 class BlockReferencesCleaner(ContentProcessor):
     """Clean up LogSeq block references"""
+
     def process(self, content):
         original_content = content
 
@@ -36,6 +40,7 @@ class BlockReferencesCleaner(ContentProcessor):
 
         return new_content, new_content != original_content
 
+
 class BlockReferencesReplacer(ContentProcessor):
     """
     Replace LogSeq block references with their actual content and a link to the source page.
@@ -44,45 +49,25 @@ class BlockReferencesReplacer(ContentProcessor):
     1. Collects all block IDs and their associated text from all files
     2. Replaces block references ((block-id)) with the actual content and a link to the source page
     """
+
     def __init__(self):
         # Dictionary to store block IDs and their associated text and page names
         # Format: {block_id: (text, page_name)}
-        self.block_map = {}
+        self.block_map: Dict[str, Tuple[str, str]] = {}
 
-    def collect_blocks(self, workspace_path):
+    def collect_blocks(self, workspace_path: str) -> None:
         """Scan all files in the workspace to collect block IDs and their text"""
-        print("Collecting block IDs and content...")
-
-        # Find all markdown files in the workspace
-        md_files = []
-        for root, _, files in os.walk(workspace_path):
-            for file in files:
-                if file.lower().endswith(".md"):
-                    md_files.append(os.path.join(root, file))
-
-        # Process each file to extract block IDs and content
-        for file_path in md_files:
+        for file_path in find_markdown_files(workspace_path):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
-
-                # Extract the page name (either from the file name or from the content)
                 page_name = self._extract_page_name(file_path, content)
-
-                # Find all block IDs and their associated text
-                self._extract_block_ids(content, page_name, file_path)
-
+                self._extract_block_ids(content, page_name)
             except Exception as e:
+                # Only print errors, not every file processed
                 print(f"Error processing {file_path}: {e}")
 
-        # Print details about collected block references for debugging
-        print(f"Collected {len(self.block_map)} block references")
-        for block_id, (text, page_name) in self.block_map.items():
-            print(f"  - Block ID: {block_id}")
-            print(f"    Text: {text}")
-            print(f"    Page: {page_name}")
-
-    def _extract_page_name(self, file_path, content):
+    def _extract_page_name(self, file_path: str, content: str) -> str:
         """Extract the page name from the file path or content"""
         # First try to get the title from the content (first heading)
         title_match = re.search(r"^#\s+(.+?)$", content, re.MULTILINE)
@@ -94,36 +79,45 @@ class BlockReferencesReplacer(ContentProcessor):
         # Clean up the name (replace underscores with spaces, etc.)
         return base_name.replace("_", " ")
 
-    def _extract_block_ids(self, content, page_name, file_path):
+    def _extract_block_ids(self, content: str, page_name: str) -> None:
         """Extract all block IDs and their associated text from the content"""
-        # Find all lines with block IDs using a more permissive pattern for indentation
         block_id_pattern = r"^(\s*.*?)id::\s*([a-f0-9-]+)(.*)$"
         lines = content.split("\n")
         for i, line in enumerate(lines):
             match = re.search(block_id_pattern, line)
             if match:
                 block_id = match.group(2).strip()
-                # Verify this is a valid UUID format with correct length and format
-                if not re.match(r"^[a-f0-9]{7,8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$", block_id):
+                if not self._is_valid_block_id(block_id):
                     continue
-                # Get the text from the previous line if this is just an ID line
-                line_text = match.group(1).strip()
-                # If the line only contains the ID and no other text,
-                # look at the previous line for the content
-                if not line_text and i > 0:
-                    line_text = lines[i - 1].strip()
-                # Clean up the text (remove leading/trailing whitespace, bullet points, etc.)
-                clean_text = re.sub(r"^\s*-\s*", "", line_text).strip()
-                # If we still have no content, try to get it from the beginning of the current line
-                if not clean_text and match.group(1):
-                    clean_text = re.sub(r"^\s*-\s*", "", match.group(1)).strip()
-                # Store the block ID, text, and page name
+                clean_text = self._extract_block_text(lines, i, match)
                 self.block_map[block_id] = (clean_text, page_name)
-                print(f"Found block ID: {block_id} in {file_path}")
-                print(f"  Text: {clean_text}")
-                print(f"  Page: {page_name}")
 
-    def process(self, content):
+    def _extract_block_text(self, lines: list, index: int, match: re.Match) -> str:
+        """Extract the text associated with a block ID"""
+        block_id = match.group(2).strip()
+        # Get the text from the previous line if this is just an ID line
+        line_text = match.group(1).strip()
+        # If the line only contains the ID and no other text,
+        # look at the previous line for the content
+        if not line_text and index > 0:
+            line_text = lines[index - 1].strip()
+        # Clean up the text (remove leading/trailing whitespace, bullet points, etc.)
+        clean_text = re.sub(r"^\s*-\s*", "", line_text).strip()
+        # If we still have no content, try to get it from the beginning of the current line
+        if not clean_text and match.group(1):
+            clean_text = re.sub(r"^\s*-\s*", "", match.group(1)).strip()
+        return clean_text
+
+    def _is_valid_block_id(self, block_id: str) -> bool:
+        """Check if the block ID matches the expected UUID format"""
+        return bool(
+            re.match(
+                r"^[a-f0-9]{7,8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                block_id,
+            )
+        )
+
+    def process(self, content: str) -> Tuple[str, bool]:
         """Replace block references with their actual content and a link to the source page"""
         original_content = content
         # Print debug info

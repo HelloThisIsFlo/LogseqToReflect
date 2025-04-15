@@ -19,16 +19,12 @@ class TestFileProcessor:
     """Tests for the base FileProcessor class"""
 
     def test_init_with_dry_run(self):
-        processor = FileProcessor(dry_run=True)
+        processor = FileProcessor([], dry_run=True)
         assert processor.dry_run is True
 
     def test_init_without_dry_run(self):
-        processor = FileProcessor(dry_run=False)
+        processor = FileProcessor([], dry_run=False)
         assert processor.dry_run is False
-
-    def test_get_processors(self):
-        processor = FileProcessor()
-        assert processor.get_processors() == []
 
 
 class TestJournalFileProcessor:
@@ -40,21 +36,6 @@ class TestJournalFileProcessor:
 
         processor = JournalFileProcessor(dry_run=False)
         assert processor.dry_run is False
-
-    def test_get_processors(self):
-        processor = JournalFileProcessor()
-        processors = processor.get_processors()
-        assert len(processors) == 6
-        # Check processor types without being too strict about order
-        processor_types = {type(p).__name__ for p in processors}
-        assert processor_types == {
-            "TaskCleaner",
-            "LinkProcessor",
-            "BlockReferencesCleaner",
-            "EmptyContentCleaner",
-            "IndentedBulletPointsProcessor",
-            "WikiLinkProcessor",
-        }
 
     def test_extract_date_from_filename_valid(self):
         processor = JournalFileProcessor()
@@ -107,21 +88,6 @@ class TestPageFileProcessor:
 
         processor = PageFileProcessor(dry_run=False)
         assert processor.dry_run is False
-
-    def test_get_processors(self):
-        processor = PageFileProcessor()
-        processors = processor.get_processors()
-        assert len(processors) == 6
-        # Check processor types without being too strict about order
-        processor_types = {type(p).__name__ for p in processors}
-        assert processor_types == {
-            "TaskCleaner",
-            "LinkProcessor",
-            "BlockReferencesCleaner",
-            "EmptyContentCleaner",
-            "IndentedBulletPointsProcessor",
-            "WikiLinkProcessor",
-        }
 
     def test_process_file(self, temp_dir):
         # Create a test file
