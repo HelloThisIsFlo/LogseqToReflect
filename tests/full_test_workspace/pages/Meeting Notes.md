@@ -10,6 +10,7 @@ collapsed:: false
   collapsed:: true
   - Sprint planning for next month
   - Reviewed current sprint progress
+    id:: 67a45c2e-529c-4831-b069-dd6f8e8d1234
   - Identified bottlenecks in the development process
 
 - Action items:

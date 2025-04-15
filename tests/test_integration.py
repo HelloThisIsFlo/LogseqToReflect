@@ -117,6 +117,10 @@ def test_dry_run_mode(test_logseq_workspace, monkeypatch, capsys):
     # Set up the output directory
     output_dir = os.path.join(os.path.dirname(test_logseq_workspace), "output_reflect")
     
+    # Clean up output directory if it exists from previous runs
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    
     # Mock sys.argv
     test_args = [
         "logseq_to_reflect_converter.py",

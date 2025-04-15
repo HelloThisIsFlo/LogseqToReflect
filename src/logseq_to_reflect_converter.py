@@ -105,10 +105,139 @@ class BlockReferencesCleaner(ContentProcessor):
         # Remove #+BEGIN_... #+END_... blocks
         new_content = re.sub(r'#\+BEGIN_\w+.*?#\+END_\w+', '', new_content, flags=re.DOTALL)
         
-        # Remove query blocks and other special blocks
-        new_content = re.sub(r'{{query.*?}}', '', new_content, flags=re.DOTALL)
+        # Remove query blocks - match the entire line containing a query
+        new_content = re.sub(r'^\s*-?\s*{{query.*?}}.*$', '', new_content, flags=re.MULTILINE)
         
         return new_content, new_content != content
+
+class BlockReferencesReplacer(ContentProcessor):
+    """
+    Replace LogSeq block references with their actual content and a link to the source page.
+    
+    This processor:
+    1. Collects all block IDs and their associated text from all files
+    2. Replaces block references ((block-id)) with the actual content and a link to the source page
+    """
+    
+    def __init__(self):
+        # Dictionary to store block IDs and their associated text and page names
+        # Format: {block_id: (text, page_name)}
+        self.block_map = {}
+        
+    def collect_blocks(self, workspace_path):
+        """Scan all files in the workspace to collect block IDs and their text"""
+        print("Collecting block IDs and content...")
+        
+        # Find all markdown files in the workspace
+        md_files = []
+        for root, _, files in os.walk(workspace_path):
+            for file in files:
+                if file.lower().endswith('.md'):
+                    md_files.append(os.path.join(root, file))
+        
+        # Process each file to extract block IDs and content
+        for file_path in md_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Extract the page name (either from the file name or from the content)
+                page_name = self._extract_page_name(file_path, content)
+                
+                # Find all block IDs and their associated text
+                self._extract_block_ids(content, page_name)
+                
+            except Exception as e:
+                print(f"Error processing {file_path}: {e}")
+        
+        print(f"Collected {len(self.block_map)} block references")
+    
+    def _extract_page_name(self, file_path, content):
+        """Extract the page name from the file path or content"""
+        # First try to get the title from the content (first heading)
+        title_match = re.search(r'^#\s+(.+?)$', content, re.MULTILINE)
+        if title_match:
+            return title_match.group(1).strip()
+        
+        # If no title found, use the file name without extension
+        base_name = os.path.basename(file_path)
+        base_name = os.path.splitext(base_name)[0]
+        
+        # Clean up the name (replace underscores with spaces, etc.)
+        return base_name.replace('_', ' ')
+    
+    def _extract_block_ids(self, content, page_name):
+        """Extract all block IDs and their associated text from the content"""
+        # Find all lines with block IDs
+        block_id_pattern = r'(.*?)id::\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(.*)$'
+        
+        lines = content.split('\n')
+        for i, line in enumerate(lines):
+            match = re.search(block_id_pattern, line)
+            if match:
+                block_id = match.group(2).strip()
+                
+                # Get the text from the previous line if this is just an ID line
+                # Otherwise use the current line's text without the ID part
+                line_text = match.group(1).strip()
+                
+                # If the line only contains the ID and no other text,
+                # look at the previous line for the content
+                if not line_text and i > 0:
+                    line_text = lines[i-1].strip()
+                
+                # Clean up the text (remove leading/trailing whitespace, bullet points, etc.)
+                clean_text = re.sub(r'^\s*-\s*', '', line_text).strip()
+                
+                # If we still have no content, try to get it from the beginning of the current line
+                if not clean_text and match.group(1):
+                    # Extract content before "id::"
+                    clean_text = re.sub(r'^\s*-\s*', '', match.group(1)).strip()
+                
+                # Store the block ID, text, and page name
+                self.block_map[block_id] = (clean_text, page_name)
+    
+    def process(self, content):
+        """Replace block references with their actual content and a link to the source page"""
+        original_content = content
+        
+        # Find all block references in the content
+        reference_pattern = r'\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)'
+        
+        # Check if there are any references at all
+        has_references = re.search(reference_pattern, content) is not None
+        
+        # Remove #+BEGIN_... #+END_... blocks
+        content = re.sub(r'#\+BEGIN_\w+.*?#\+END_\w+', '', content, flags=re.DOTALL)
+        
+        # Remove query blocks - match the entire line containing a query
+        content = re.sub(r'^\s*-?\s*{{query.*?}}.*$', '', content, flags=re.MULTILINE)
+        
+        # If no references found after cleaning blocks, return early
+        if not has_references:
+            return content, original_content != content
+            
+        # If we have no block map but there are references, we'll still remove them
+        if not self.block_map:
+            content = re.sub(reference_pattern, "", content)
+            return content, original_content != content
+        
+        # Count replacements to determine if content changed
+        replacements_made = 0
+        
+        def replace_reference(match):
+            nonlocal replacements_made
+            block_id = match.group(1)
+            if block_id in self.block_map:
+                text, page_name = self.block_map[block_id]
+                replacements_made += 1
+                return f"{text} ([[{page_name}]])"
+            replacements_made += 1
+            return ""  # If the block ID is not found, remove the reference
+        
+        content = re.sub(reference_pattern, replace_reference, content)
+        
+        return content, original_content != content
 
 class EmptyContentCleaner(ContentProcessor):
     """Clean up empty lines and empty bullet points left after content removal"""
@@ -470,17 +599,29 @@ class JournalFileProcessor(FileProcessor):
     
     def __init__(self, dry_run=False):
         super().__init__(dry_run)
+        self.block_references_replacer = None
     
     def get_processors(self):
         """Get list of processors for journal files."""
-        return [
+        processors = [
+            LinkProcessor(),  # Process links first
+        ]
+        
+        # Add the block references replacer or cleaner
+        if self.block_references_replacer:
+            processors.append(self.block_references_replacer)
+        else:
+            processors.append(BlockReferencesCleaner())
+        
+        # Add the remaining processors in order
+        processors.extend([
             TaskCleaner(),
-            LinkProcessor(),
-            BlockReferencesCleaner(),
             EmptyContentCleaner(),
             IndentedBulletPointsProcessor(),
             WikiLinkProcessor()
-        ]
+        ])
+        
+        return processors
     
     def extract_date_from_filename(self, filename):
         """Extract date components from filename in format YYYY_MM_DD.md."""
@@ -551,17 +692,29 @@ class PageFileProcessor(FileProcessor):
     
     def __init__(self, dry_run=False):
         super().__init__(dry_run)
+        self.block_references_replacer = None
     
     def get_processors(self):
         """Get list of processors for page files."""
-        return [
+        processors = [
+            LinkProcessor(),  # Process links first
+        ]
+        
+        # Add the block references replacer or cleaner
+        if self.block_references_replacer:
+            processors.append(self.block_references_replacer)
+        else:
+            processors.append(BlockReferencesCleaner())
+        
+        # Add the remaining processors in order
+        processors.extend([
             TaskCleaner(),
-            LinkProcessor(),
-            BlockReferencesCleaner(),
             EmptyContentCleaner(),
             IndentedBulletPointsProcessor(),
             WikiLinkProcessor()
-        ]
+        ])
+        
+        return processors
     
     def process_file(self, file_path, output_path):
         """
@@ -571,22 +724,22 @@ class PageFileProcessor(FileProcessor):
             Tuple of (content_changed, success)
         """
         try:
-            filename = os.path.basename(file_path)
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Apply common processors
-            content_changed = False
-            for processor in self.get_processors():
-                new_content, changed = processor.process(content)
-                content = new_content
-                content_changed = content_changed or changed
+            # Get base processors
+            processors = self.get_processors()
             
-            # Apply page title processor
-            title_processor = PageTitleProcessor(filename)
-            new_content, changed = title_processor.process(content)
-            content = new_content
-            content_changed = content_changed or changed
+            # Add PageTitleProcessor first, which needs the filename
+            filename = os.path.basename(file_path)
+            processors.insert(0, PageTitleProcessor(filename))
+            
+            # Run all processors
+            content_changed = False
+            for processor in processors:
+                content, changed = processor.process(content)
+                if changed:
+                    content_changed = True
             
             if self.dry_run:
                 if content_changed:
@@ -731,6 +884,9 @@ class LogSeqToReflectConverter:
         
         self.dry_run = dry_run
         
+        # Create the block references replacer
+        self.block_references_replacer = BlockReferencesReplacer()
+        
         # Create the directory walker
         self.walker = DirectoryWalker(workspace, self.output_dir, dry_run)
     
@@ -743,6 +899,13 @@ class LogSeqToReflectConverter:
         if not self.dry_run:
             # Create output directory if it doesn't exist
             os.makedirs(self.output_dir, exist_ok=True)
+        
+        # First, collect all block references from all files
+        self.block_references_replacer.collect_blocks(self.workspace)
+        
+        # Update the file processors with the block references replacer
+        self.walker.journal_processor.block_references_replacer = self.block_references_replacer
+        self.walker.page_processor.block_references_replacer = self.block_references_replacer
         
         # Process journal directories
         journal_dirs = self.walker.find_directories('journals')

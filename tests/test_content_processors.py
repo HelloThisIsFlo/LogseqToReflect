@@ -4,7 +4,8 @@ from src.logseq_to_reflect_converter import (
     DateHeaderProcessor, 
     TaskCleaner, 
     LinkProcessor, 
-    BlockReferencesCleaner, 
+    BlockReferencesCleaner,
+    BlockReferencesReplacer, 
     PageTitleProcessor,
     IndentedBulletPointsProcessor,
     EmptyContentCleaner,
@@ -276,4 +277,96 @@ class TestWikiLinkProcessor:
         content = "Regular text without wikilinks"
         new_content, changed = processor.process(content)
         assert changed is False
-        assert content == new_content 
+        assert content == new_content
+
+class TestBlockReferencesReplacer:
+    """Tests for the BlockReferencesReplacer class"""
+    
+    def test_collect_and_replace_block_references(self, tmpdir):
+        # Create sample files with block IDs and references
+        page1_content = """# Page 1
+- This is a test block
+  id:: 67a45c2e-529c-4831-b069-dd6f8e8d1234
+- Another block
+"""
+        page1_path = tmpdir.join("page1.md")
+        page1_path.write(page1_content)
+        
+        page2_content = """# Page 2
+- Reference to block: ((67a45c2e-529c-4831-b069-dd6f8e8d1234))
+- Normal text
+"""
+        page2_path = tmpdir.join("page2.md")
+        page2_path.write(page2_content)
+        
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+        
+        # Verify the block was collected correctly
+        assert "67a45c2e-529c-4831-b069-dd6f8e8d1234" in replacer.block_map
+        text, page_name = replacer.block_map["67a45c2e-529c-4831-b069-dd6f8e8d1234"]
+        assert text == "This is a test block"
+        assert page_name == "Page 1"
+        
+        # Test replacing in content
+        result, changed = replacer.process(page2_content)
+        assert changed is True
+        assert "This is a test block ([[Page 1]])" in result
+        assert "((67a45c2e-529c-4831-b069-dd6f8e8d1234))" not in result
+    
+    def test_replace_multiple_references(self, tmpdir):
+        # Create sample files with multiple block IDs and references
+        blocks_content = """# Blocks
+- First block
+  id:: aaaa1111-2222-3333-4444-555566667777
+- Second block
+  id:: bbbb1111-2222-3333-4444-555566667777
+- Third block with nested content
+  id:: cccc1111-2222-3333-4444-555566667777
+  - Nested item
+"""
+        blocks_path = tmpdir.join("blocks.md")
+        blocks_path.write(blocks_content)
+        
+        references_content = """# References
+- First reference: ((aaaa1111-2222-3333-4444-555566667777))
+- Second reference: ((bbbb1111-2222-3333-4444-555566667777))
+- Combined references: ((aaaa1111-2222-3333-4444-555566667777)) and ((cccc1111-2222-3333-4444-555566667777))
+"""
+        references_path = tmpdir.join("references.md")
+        references_path.write(references_content)
+        
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+        
+        # Verify blocks were collected
+        assert len(replacer.block_map) == 3
+        
+        # Test replacing in content
+        result, changed = replacer.process(references_content)
+        assert changed is True
+        assert "First reference: First block ([[Blocks]])" in result
+        assert "Second reference: Second block ([[Blocks]])" in result
+        assert "Combined references: First block ([[Blocks]]) and Third block with nested content ([[Blocks]])" in result
+        
+    def test_handle_missing_references(self, tmpdir):
+        # Create a file with a reference to a non-existent block
+        content = """# Missing Reference
+- Reference to non-existent block: ((12345678-1234-1234-1234-123456789012))
+"""
+        file_path = tmpdir.join("missing.md")
+        file_path.write(content)
+        
+        # Initialize and collect blocks (there are none to collect)
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+        
+        # Test replacing in content - should still remove reference even with empty block map
+        result, changed = replacer.process(content)
+        
+        # Since there are references in the content, the processor should remove them
+        assert changed is True
+        assert "Reference to non-existent block: " in result
+        assert "((12345678-1234-1234-1234-123456789012))" not in result 
