@@ -1,5 +1,6 @@
 from .base import ContentProcessor
 import re
+from typing import List
 
 
 class WikiLinkProcessor(ContentProcessor):
@@ -30,56 +31,55 @@ class WikiLinkProcessor(ContentProcessor):
             "with",
         }
 
-    def _title_case(self, text):
-        words = text.split()
+    def _title_case_words(self, words: List[str]) -> List[str]:
+        """Apply title case rules to a list of words"""
         if not words:
-            return ""
+            return []
+
+        # First word is always capitalized
         result = [words[0].capitalize()]
+
+        # Middle words follow lowercase rules
         for word in words[1:-1] if len(words) > 1 else []:
             if word.lower() in self.lowercase_words:
                 result.append(word.lower())
             else:
                 result.append(word.capitalize())
+
+        # Last word is always capitalized
         if len(words) > 1:
             result.append(words[-1].capitalize())
-        return " ".join(result)
 
-    def _capitalize_with_slash_rules(self, text):
-        if "/" in text:
-            parts = text.split("/")
-            last_part_words = last_part = parts[-1].split(" ")
-            last_part_title_cased = []
-            if last_part_words:
-                last_part_title_cased.append(last_part_words[0].capitalize())
-                for word in last_part_words[1:-1] if len(last_part_words) > 1 else []:
-                    if word.lower() in self.lowercase_words:
-                        last_part_title_cased.append(word.lower())
-                    else:
-                        last_part_title_cased.append(word.capitalize())
-                if len(last_part_words) > 1:
-                    last_part_title_cased.append(last_part_words[-1].capitalize())
-            formatted_last_part = " ".join(last_part_title_cased)
-            parts = [p.lower() for p in parts[:-1]] + [formatted_last_part]
-            return "/".join(parts)
-        else:
-            words = text.split(" ")
-            if not words:
-                return ""
-            result = [words[0].capitalize()]
-            for word in words[1:-1] if len(words) > 1 else []:
-                if word.lower() in self.lowercase_words:
-                    result.append(word.lower())
-                else:
-                    result.append(word.capitalize())
-            if len(words) > 1:
-                result.append(words[-1].capitalize())
-            return " ".join(result)
+        return result
+
+    def _title_case(self, text: str) -> str:
+        """Apply title case to a text string"""
+        words = text.split()
+        return " ".join(self._title_case_words(words))
+
+    def _format_path_with_slashes(self, text: str) -> str:
+        """Format text that contains path-like components with slashes"""
+        if "/" not in text:
+            return self._title_case(text)
+
+        # Split by slash and keep all parts except last in lowercase
+        parts = text.split("/")
+
+        # Apply title case to the last part only
+        last_part = self._title_case(parts[-1])
+
+        # All parts before the last part should be lowercase
+        path_parts = [p.lower() for p in parts[:-1]] + [last_part]
+
+        return "/".join(path_parts)
 
     def _format_wikilink(self, match):
+        """Format a wikilink match"""
         link_text = match.group(1)
-        formatted_text = self._capitalize_with_slash_rules(link_text)
+        formatted_text = self._format_path_with_slashes(link_text)
         return f"[[{formatted_text}]]"
 
     def process(self, content):
+        """Process wikilinks in content"""
         new_content = re.sub(r"\[\[(.*?)\]\]", self._format_wikilink, content)
         return new_content, new_content != content

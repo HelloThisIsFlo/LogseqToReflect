@@ -1,71 +1,153 @@
 import os
+import logging
+from typing import Tuple, List, Dict, Any
 from .directory_walker import DirectoryWalker
 from ..processors.block_references import BlockReferencesReplacer
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+class ConversionStats:
+    """Tracks statistics for the conversion process"""
+
+    def __init__(self):
+        self.journal_files_processed = 0
+        self.journal_files_changed = 0
+        self.journal_files_renamed = 0
+        self.pages_files_processed = 0
+        self.pages_files_changed = 0
+
+    def add_journal_stats(self, files: int, changed: int, renamed: int) -> None:
+        """Add journal directory processing statistics"""
+        self.journal_files_processed += files
+        self.journal_files_changed += changed
+        self.journal_files_renamed += renamed
+
+    def add_pages_stats(self, files: int, changed: int) -> None:
+        """Add pages directory processing statistics"""
+        self.pages_files_processed += files
+        self.pages_files_changed += changed
+
+    @property
+    def total_files(self) -> int:
+        """Total number of files processed"""
+        return self.journal_files_processed + self.pages_files_processed
+
+    @property
+    def total_changed(self) -> int:
+        """Total number of files changed"""
+        return self.journal_files_changed + self.pages_files_changed
+
+    def __str__(self) -> str:
+        """Generate a report of the conversion statistics"""
+        return (
+            f"  Journal files processed: {self.journal_files_processed}\n"
+            f"  Journal files with content changes: {self.journal_files_changed}\n"
+            f"  Journal files renamed: {self.journal_files_renamed}\n"
+            f"  Pages files processed: {self.pages_files_processed}\n"
+            f"  Pages files with content changes: {self.pages_files_changed}\n"
+            f"  Total files processed: {self.total_files}\n"
+            f"  Total files with changes: {self.total_changed}"
+        )
 
 
 class LogSeqToReflectConverter:
     """Main converter class to convert LogSeq files to Reflect format"""
 
     def __init__(self, workspace: str, output_dir: str = None, dry_run: bool = False):
+        """
+        Initialize the LogSeq to Reflect converter.
+
+        Args:
+            workspace: Path to the LogSeq workspace
+            output_dir: Optional custom output directory. If not provided, will create
+                       "<workspace> (Reflect format)" in the same parent directory
+            dry_run: If True, show what would be changed without making changes
+        """
         self.workspace = os.path.abspath(workspace)
-        if output_dir is None:
-            workspace_name = os.path.basename(workspace)
-            parent_dir = os.path.dirname(workspace)
-            self.output_dir = os.path.join(
-                parent_dir, f"{workspace_name} (Reflect format)"
-            )
-        else:
-            self.output_dir = os.path.abspath(output_dir)
+        self.output_dir = self._determine_output_dir(output_dir)
         self.dry_run = dry_run
+        self.stats = ConversionStats()
+
+        # Initialize processors and walker
         self.block_references_replacer = BlockReferencesReplacer()
         self.walker = DirectoryWalker(
             workspace, self.output_dir, dry_run, self.block_references_replacer
         )
 
-    def run(self) -> None:
-        """Run the conversion process for the LogSeq workspace."""
-        print(f"Converting LogSeq workspace: {self.workspace}")
-        print(f"Output directory: {self.output_dir}")
-        print(f"Dry run: {self.dry_run}")
+    def _determine_output_dir(self, output_dir: str = None) -> str:
+        """Determine the output directory path"""
+        if output_dir is None:
+            workspace_name = os.path.basename(self.workspace)
+            parent_dir = os.path.dirname(self.workspace)
+            return os.path.join(parent_dir, f"{workspace_name} (Reflect format)")
+        else:
+            return os.path.abspath(output_dir)
+
+    def _process_journal_directories(self, journal_dirs: List[str]) -> None:
+        """Process all journal directories"""
+        for journal_dir in journal_dirs:
+            logger.info(f"Processing journal directory: {journal_dir}")
+            files, changed, renamed = self.walker.process_journal_directory(journal_dir)
+            self.stats.add_journal_stats(files, changed, renamed)
+
+    def _process_pages_directories(self, pages_dirs: List[str]) -> None:
+        """Process all pages directories"""
+        for pages_dir in pages_dirs:
+            logger.info(f"Processing pages directory: {pages_dir}")
+            files, changed = self.walker.process_pages_directory(pages_dir)
+            self.stats.add_pages_stats(files, changed)
+
+    def run(self) -> ConversionStats:
+        """
+        Run the conversion process for the LogSeq workspace.
+
+        Returns:
+            ConversionStats object with conversion statistics
+        """
+        logger.info(f"Converting LogSeq workspace: {self.workspace}")
+        logger.info(f"Output directory: {self.output_dir}")
+        logger.info(f"Dry run: {self.dry_run}")
+
+        # Create output directory if needed
         if not self.dry_run:
             os.makedirs(self.output_dir, exist_ok=True)
+
+        # Collect block references from all files
         self.block_references_replacer.collect_blocks(self.workspace)
+
+        # Find directories to process
         journals_dirs = self.walker.find_directories("journals")
         pages_dirs = self.walker.find_directories("pages")
+
+        # Report what we found
         if journals_dirs:
-            print(f"Found {len(journals_dirs)} journal directories")
+            logger.info(f"Found {len(journals_dirs)} journal directories")
         else:
-            print("No journal directories found")
+            logger.info("No journal directories found")
+
         if pages_dirs:
-            print(f"Found {len(pages_dirs)} pages directories")
+            logger.info(f"Found {len(pages_dirs)} pages directories")
         else:
-            print("No pages directories found")
-        total_journal_files = total_journal_content_changed = total_journal_renamed = 0
-        total_pages_files = total_pages_content_changed = 0
-        for journal_dir in journals_dirs:
-            files, changed, renamed = self.walker.process_journal_directory(journal_dir)
-            total_journal_files += files
-            total_journal_content_changed += changed
-            total_journal_renamed += renamed
-        for pages_dir in pages_dirs:
-            files, changed = self.walker.process_pages_directory(pages_dir)
-            total_pages_files += files
-            total_pages_content_changed += changed
-        print(f"  Journal files processed: {total_journal_files}")
-        print(f"  Journal files with content changes: {total_journal_content_changed}")
-        print(f"  Journal files renamed: {total_journal_renamed}")
-        if pages_dirs:
-            print(f"  Pages files processed: {total_pages_files}")
-            print(f"  Pages files with content changes: {total_pages_content_changed}")
-        total_files = total_journal_files + total_pages_files
-        total_changes = total_journal_content_changed + total_pages_content_changed
-        print(f"  Total files processed: {total_files}")
-        print(f"  Total files with changes: {total_changes}")
+            logger.info("No pages directories found")
+
+        # Process all directories
+        self._process_journal_directories(journals_dirs)
+        self._process_pages_directories(pages_dirs)
+
+        # Return stats for reporting
+        return self.stats
 
 
 def main():
+    """Command-line entry point"""
     import argparse
 
+    # Configure logging for command-line use
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    # Parse command line arguments
     parser = argparse.ArgumentParser(
         description="Convert LogSeq files for use in Reflect."
     )
@@ -83,14 +165,31 @@ def main():
         action="store_true",
         help="Show what would be done without making changes",
     )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable verbose output"
+    )
+
     args = parser.parse_args()
+
+    # Set logging level based on verbosity
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Validate workspace
     if not os.path.isdir(args.workspace):
-        print(f"Error: {args.workspace} is not a valid directory")
+        logger.error(f"Error: {args.workspace} is not a valid directory")
         return
+
+    # Run the conversion
     converter = LogSeqToReflectConverter(
         workspace=args.workspace, output_dir=args.output_dir, dry_run=args.dry_run
     )
-    converter.run()
+    stats = converter.run()
+
+    # Print statistics
+    print("\nConversion Statistics:")
+    print(stats)
+
     if args.dry_run:
         print("\nRun without --dry-run to apply these changes.")
 

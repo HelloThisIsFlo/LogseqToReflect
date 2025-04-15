@@ -50,13 +50,14 @@ def test_cli_help():
     """Test the CLI help command"""
     result = run_cli(["--help"])
     assert result.returncode == 0
-    assert "usage:" in result.stdout.lower()
+    assert "Convert LogSeq files for use in Reflect" in result.stdout
 
 
 def test_cli_invalid_workspace():
     """Test the CLI with an invalid workspace"""
     result = run_cli(["--workspace", "nonexistent_dir"])
-    assert "Error: nonexistent_dir is not a valid directory" in result.stdout
+    # With updated logging, error messages now go to stderr
+    assert "Error: nonexistent_dir is not a valid directory" in result.stderr
 
 
 def test_cli_dry_run(test_workspace):
@@ -72,7 +73,8 @@ def test_cli_dry_run(test_workspace):
         ]
     )
     assert result.returncode == 0
-    assert "Dry run: True" in result.stdout
+    # Check for "Dry run: True" in stderr since we now use logger
+    assert "Dry run: True" in result.stderr
     assert "Run without --dry-run to apply these changes" in result.stdout
 
     # Check that no files were created

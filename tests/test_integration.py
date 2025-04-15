@@ -180,12 +180,12 @@ def test_dry_run_mode(test_logseq_workspace, monkeypatch, capsys):
     captured = capsys.readouterr()
     output = captured.out
 
-    assert "Dry run: True" in output
+    # Check for evidence of dry run mode
+    assert "Would update content in" in output
     assert "Would save to" in output
-    assert "Would update content" in output
     assert "Run without --dry-run to apply these changes" in output
 
-    # Verify no files were created
+    # Check that output directory was not created
     assert not os.path.exists(output_dir)
 
 
