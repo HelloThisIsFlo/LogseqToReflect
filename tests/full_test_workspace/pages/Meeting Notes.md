@@ -9,6 +9,7 @@ collapsed:: false
 - Discussed project timeline
   collapsed:: true
   - Sprint planning for next month
+    id:: e95597dc-4b59-4640-98f7-53c949bd0616
   - Reviewed current sprint progress
     id:: 67a45c2e-529c-4831-b069-dd6f8e8d1234
   - Identified bottlenecks in the development process
