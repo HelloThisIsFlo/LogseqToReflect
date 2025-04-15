@@ -3,7 +3,6 @@
 tags:: #project, #active
 type:: project
 status:: active
-id:: 7a45c2e-529c-4831-b069-dd6f8e8d9876
 
 # Project Alpha
 - Started on [[Feb 1st, 2025]]
@@ -22,7 +21,6 @@ id:: 7a45c2e-529c-4831-b069-dd6f8e8d9876
 
 ## Tasks
 - [ ] Set up CI/CD pipeline
-  id:: 8b56c3e-639d-5942-c170-ee7f9e9e0987
 - [x] Create project documentation
 - [ ] Implement authentication system
 

@@ -9,14 +9,13 @@ created:: [[Feb 15th, 2025]]
 ## Team Meeting - February 15, 2025
 - Discussed project timeline
   - Sprint planning for next month
-    
+
   - Reviewed current sprint progress
-    
+
   - Identified bottlenecks in the development process
 
 - Action items:
   - [ ] Update roadmap document
-    id:: 3c45d2f-639d-5942-c170-ee7f9e9e5432
     - [ ] Find where the document is stored
     - [ ] Adjust date
     - [ ] Share link with the team
