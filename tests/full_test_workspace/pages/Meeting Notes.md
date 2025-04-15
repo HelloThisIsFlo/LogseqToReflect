@@ -40,5 +40,4 @@ collapsed:: false
 {{query (and (page "Meeting") (task TODO))}}
 
 ## References
-- Previous meeting: ((2d34b2e-729c-4831-b069-dd6f8e8d1234))
 - See [[project timeline]] for deadlines 

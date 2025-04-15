@@ -115,12 +115,26 @@ class BlockReferencesCleaner(ContentProcessor):
     """Clean up LogSeq block references"""
 
     def process(self, content):
+        # Keep a copy of the original content
+        original_content = content
+
         # Remove block references ((block-id))
         new_content = re.sub(
             r"\(\([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\)\)",
             "",
             content,
         )
+
+        # Remove embedded block references {{embed ((block-id))}}
+        # Use a more targeted approach with a capture group for the content between {{ and }}
+        new_content = re.sub(
+            r"\{\{embed\s+\(\([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\)\)\}\}",
+            "",
+            new_content,
+        )
+
+        # Special case: handle any leftover {{embed ...}} patterns
+        new_content = re.sub(r"\{\{embed\s+.*?\}\}", "", new_content)
 
         # Remove #+BEGIN_... #+END_... blocks
         new_content = re.sub(
@@ -129,10 +143,10 @@ class BlockReferencesCleaner(ContentProcessor):
 
         # Remove query blocks - match the entire line containing a query
         new_content = re.sub(
-            r"^\s*-?\s*{{query.*?}}.*$", "", new_content, flags=re.MULTILINE
+            r"^\s*-?\s*\{\{query.*?\}\}.*$", "", new_content, flags=re.MULTILINE
         )
 
-        return new_content, new_content != content
+        return new_content, new_content != original_content
 
 
 class BlockReferencesReplacer(ContentProcessor):
@@ -170,12 +184,17 @@ class BlockReferencesReplacer(ContentProcessor):
                 page_name = self._extract_page_name(file_path, content)
 
                 # Find all block IDs and their associated text
-                self._extract_block_ids(content, page_name)
+                self._extract_block_ids(content, page_name, file_path)
 
             except Exception as e:
                 print(f"Error processing {file_path}: {e}")
 
+        # Print details about collected block references for debugging
         print(f"Collected {len(self.block_map)} block references")
+        for block_id, (text, page_name) in self.block_map.items():
+            print(f"  - Block ID: {block_id}")
+            print(f"    Text: {text}")
+            print(f"    Page: {page_name}")
 
     def _extract_page_name(self, file_path, content):
         """Extract the page name from the file path or content"""
@@ -191,10 +210,10 @@ class BlockReferencesReplacer(ContentProcessor):
         # Clean up the name (replace underscores with spaces, etc.)
         return base_name.replace("_", " ")
 
-    def _extract_block_ids(self, content, page_name):
+    def _extract_block_ids(self, content, page_name, file_path):
         """Extract all block IDs and their associated text from the content"""
-        # Find all lines with block IDs
-        block_id_pattern = r"(.*?)id::\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(.*)$"
+        # Find all lines with block IDs using a more permissive pattern for indentation
+        block_id_pattern = r"^(\s*.*?)id::\s*([a-f0-9-]+)(.*)$"
 
         lines = content.split("\n")
         for i, line in enumerate(lines):
@@ -202,8 +221,15 @@ class BlockReferencesReplacer(ContentProcessor):
             if match:
                 block_id = match.group(2).strip()
 
+                # Verify this is a valid UUID format with correct length and format
+                # More permissive pattern that allows for 7-character first segment
+                if not re.match(
+                    r"^[a-f0-9]{7,8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                    block_id,
+                ):
+                    continue
+
                 # Get the text from the previous line if this is just an ID line
-                # Otherwise use the current line's text without the ID part
                 line_text = match.group(1).strip()
 
                 # If the line only contains the ID and no other text,
@@ -221,50 +247,107 @@ class BlockReferencesReplacer(ContentProcessor):
 
                 # Store the block ID, text, and page name
                 self.block_map[block_id] = (clean_text, page_name)
+                print(f"Found block ID: {block_id} in {file_path}")
+                print(f"  Text: {clean_text}")
+                print(f"  Page: {page_name}")
 
     def process(self, content):
         """Replace block references with their actual content and a link to the source page"""
         original_content = content
 
-        # Find all block references in the content
-        reference_pattern = (
-            r"\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)"
-        )
+        # Print debug info
+        print("Processing content with BlockReferencesReplacer")
 
-        # Check if there are any references at all
-        has_references = re.search(reference_pattern, content) is not None
+        # First, we need to identify all embedded references and process them before regular references
+        # This prevents issues where regular references inside embedded tags get replaced first
+        for block_id, (text, page_name) in self.block_map.items():
+            # Look for embedded references line by line to preserve indentation
+            lines = content.split("\n")
+            modified_lines = False
+
+            for i, line in enumerate(lines):
+                # Match "{{embed ((block-id))}}" pattern
+                embed_pattern = r"\{\{embed\s+\(\(" + re.escape(block_id) + r"\)\)\}\}"
+                embed_match = re.search(embed_pattern, line)
+                if embed_match:
+                    print(f"Found embedded reference to {block_id}")
+
+                    # Extract indentation from the beginning of the line
+                    indentation = len(line) - len(line.lstrip())
+                    indent_spaces = " " * indentation
+
+                    # Get the text before and after the embedded reference
+                    before_embed = line[: embed_match.start()]
+                    after_embed = line[embed_match.end() :]
+
+                    # Check if this is a bullet point line (starts with "- " after indentation)
+                    line_content = line.lstrip()
+                    is_bullet = line_content.startswith("- ")
+
+                    # If the line has content before the embed, preserve it
+                    # Otherwise use bullet point format if it's a bullet point line
+                    if before_embed.strip():
+                        # Preserve existing line content around the embed
+                        lines[i] = (
+                            f"{before_embed}_{text} ([[{page_name}]])_{after_embed}"
+                        )
+                    else:
+                        # No text before the embed, just indentation
+                        if is_bullet:
+                            # If it's a bullet point, preserve the bullet
+                            lines[i] = (
+                                f"{indent_spaces}- _{text} ([[{page_name}]])_{after_embed}"
+                            )
+                        else:
+                            # Not a bullet point, just add the content
+                            lines[i] = (
+                                f"{indent_spaces}_{text} ([[{page_name}]])_{after_embed}"
+                            )
+
+                    modified_lines = True
+
+            # Reconstruct the content only if modifications were made
+            if modified_lines:
+                content = "\n".join(lines)
+
+        # Process regular block references after handling all embedded references
+        for block_id, (text, page_name) in self.block_map.items():
+            # Check for regular references
+            pattern = r"\(\(" + re.escape(block_id) + r"\)\)"
+            if re.search(pattern, content):
+                print(f"Found regular reference to {block_id}")
+
+            # Replace regular references to this block ID with italicized content + page link
+            content = re.sub(pattern, f"_{text} ([[{page_name}]])_", content)
+
+        # If no block IDs in the map but there are still references, clean them up
+        if not self.block_map:
+            # Remove regular references with updated pattern to match both 7 and 8 character first segments
+            content = re.sub(
+                r"\(\([a-f0-9]{7,8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\)\)",
+                "",
+                content,
+            )
+
+            # Remove embedded references with updated pattern, preserving surrounding text
+            content = re.sub(
+                r"\{\{embed\s+\(\([a-f0-9]{7,8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\)\)\}\}",
+                "",
+                content,
+            )
 
         # Remove #+BEGIN_... #+END_... blocks
         content = re.sub(r"#\+BEGIN_\w+.*?#\+END_\w+", "", content, flags=re.DOTALL)
 
         # Remove query blocks - match the entire line containing a query
-        content = re.sub(r"^\s*-?\s*{{query.*?}}.*$", "", content, flags=re.MULTILINE)
+        content = re.sub(
+            r"^\s*-?\s*\{\{query.*?\}\}.*$", "", content, flags=re.MULTILINE
+        )
 
-        # If no references found after cleaning blocks, return early
-        if not has_references:
-            return content, original_content != content
+        # Special case: handle any leftover {{embed ...}} patterns
+        content = re.sub(r"\{\{embed\s+.*?\}\}", "", content)
 
-        # If we have no block map but there are references, we'll still remove them
-        if not self.block_map:
-            content = re.sub(reference_pattern, "", content)
-            return content, original_content != content
-
-        # Count replacements to determine if content changed
-        replacements_made = 0
-
-        def replace_reference(match):
-            nonlocal replacements_made
-            block_id = match.group(1)
-            if block_id in self.block_map:
-                text, page_name = self.block_map[block_id]
-                replacements_made += 1
-                return f"{text} ([[{page_name}]])"
-            replacements_made += 1
-            return ""  # If the block ID is not found, remove the reference
-
-        content = re.sub(reference_pattern, replace_reference, content)
-
-        return content, original_content != content
+        return content, content != original_content
 
 
 class EmptyContentCleaner(ContentProcessor):

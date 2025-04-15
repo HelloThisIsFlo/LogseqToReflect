@@ -102,6 +102,15 @@ class TestBlockReferencesCleaner:
         assert "((" not in new_content
         assert "Text with a reference  in the middle" == new_content
 
+    def test_remove_embedded_block_references(self):
+        processor = BlockReferencesCleaner()
+        content = "Text with an embedded reference {{embed ((abcd1234-5678-90ab-cdef-1234567890ab))}} in the middle"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "{{embed" not in new_content
+        assert "((" not in new_content
+        assert "Text with an embedded reference  in the middle" == new_content
+
     def test_remove_code_blocks(self):
         processor = BlockReferencesCleaner()
         content = "Text before\n#+BEGIN_SRC python\ndef hello():\n    print('Hello')\n#+END_SRC\nText after"
@@ -367,10 +376,10 @@ class TestBlockReferencesReplacer:
         # Test replacing in content
         result, changed = replacer.process(references_content)
         assert changed is True
-        assert "First reference: First block ([[Blocks]])" in result
-        assert "Second reference: Second block ([[Blocks]])" in result
+        assert "First reference: _First block ([[Blocks]])_" in result
+        assert "Second reference: _Second block ([[Blocks]])_" in result
         assert (
-            "Combined references: First block ([[Blocks]]) and Third block with nested content ([[Blocks]])"
+            "Combined references: _First block ([[Blocks]])_ and _Third block with nested content ([[Blocks]])_"
             in result
         )
 
@@ -393,3 +402,48 @@ class TestBlockReferencesReplacer:
         assert changed is True
         assert "Reference to non-existent block: " in result
         assert "((12345678-1234-1234-1234-123456789012))" not in result
+
+    def test_handle_embedded_references(self, tmpdir):
+        # Create sample files with block IDs and embedded references
+        page1_content = """# Page 1
+- This is a test block
+  id:: abcd1234-5678-90ab-cdef-1234567890ab
+- Another block
+"""
+        page1_path = tmpdir.join("page1.md")
+        page1_path.write(page1_content)
+
+        page2_content = """# Page 2
+- Regular reference: ((abcd1234-5678-90ab-cdef-1234567890ab))
+- Embedded reference: {{embed ((abcd1234-5678-90ab-cdef-1234567890ab))}}
+- Normal text
+"""
+        page2_path = tmpdir.join("page2.md")
+        page2_path.write(page2_content)
+
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+
+        # Verify the block was collected correctly
+        assert "abcd1234-5678-90ab-cdef-1234567890ab" in replacer.block_map
+        text, page_name = replacer.block_map["abcd1234-5678-90ab-cdef-1234567890ab"]
+        assert text == "This is a test block"
+        assert page_name == "Page 1"
+
+        # Test replacing in content
+        result, changed = replacer.process(page2_content)
+        assert changed is True
+
+        # Check that the regular reference was replaced correctly
+        assert "Regular reference: _This is a test block ([[Page 1]])_" in result
+
+        # Check that the embedded reference was also replaced
+        # Regular reference is already fixed but let's check if the embedded reference was replaced properly
+        assert "{{embed" not in result
+        assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in result
+
+        # The structure with the exact wording depends on implementation, but at minimum:
+        assert "Embedded reference:" in result
+        assert "This is a test block" in result
+        assert "[[Page 1]]" in result

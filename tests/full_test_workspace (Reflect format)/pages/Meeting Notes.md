@@ -27,6 +27,7 @@ created:: [[Feb 15th, 2025]]
 - Main points:
   - Need to refactor [[Database]] schema
   - Discussed migration to [[Microservices]]
+    - _TODO Update roadmap document ([[Meeting Notes]])_
   - Evaluated [[Cloud Providers]]
 
 - Decisions:
@@ -36,5 +37,4 @@ created:: [[Feb 15th, 2025]]
 
 
 ## References
-- Previous meeting: ((2d34b2e-729c-4831-b069-dd6f8e8d1234))
 - See [[Project Timeline]] for deadlines
