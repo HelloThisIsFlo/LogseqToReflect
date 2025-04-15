@@ -125,12 +125,31 @@ class BlockReferencesReplacer(ContentProcessor):
         line_text = match.group(1).strip()
 
         # If the line only contains the ID and no other text,
-        # look at the previous line for the content
-        if not line_text and index > 0:
-            line_text = lines[index - 1].strip()
+        # look upwards for the nearest non-empty, non-property, non-id line
+        if not line_text:
+            i = index - 1
+            while i >= 0:
+                prev_line = lines[i].strip()
+                # Skip empty lines and property/id lines
+                if (
+                    prev_line
+                    and not prev_line.startswith("id::")
+                    and "::" not in prev_line
+                ):
+                    line_text = prev_line
+                    break
+                i -= 1
 
         # Clean up the text (remove leading/trailing whitespace, bullet points, etc.)
         clean_text = re.sub(r"^\s*-\s*", "", line_text).strip()
+
+        # Convert LogSeq task markers to Reflect format if present
+        if clean_text.startswith("TODO "):
+            clean_text = "[ ] " + clean_text[5:]
+        elif clean_text.startswith("DONE "):
+            clean_text = "[x] " + clean_text[5:]
+        elif clean_text.startswith("DOING "):
+            clean_text = "[ ] " + clean_text[6:]
 
         # If we still have no content, try to get it from the beginning of the current line
         if not clean_text and match.group(1):
