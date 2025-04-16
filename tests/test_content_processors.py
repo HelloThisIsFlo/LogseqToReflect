@@ -13,6 +13,7 @@ from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
 from src.processors.empty_content_cleaner import EmptyContentCleaner
 from src.processors.wikilink import WikiLinkProcessor
 import tempfile
+from src.file_handlers.directory_walker import DirectoryWalker
 
 
 class TestDateHeaderProcessor:
@@ -446,20 +447,21 @@ class TestBlockReferencesReplacer:
     """Tests for the BlockReferencesReplacer class"""
 
     def test_collect_and_replace_block_references(self, tmpdir):
-        # Create sample files with block IDs and references
+        # Create sample files with block IDs and references in 'pages'
+        pages_dir = tmpdir.mkdir("pages")
         page1_content = """# Page 1
 - This is a test block
   id:: 67a45c2e-529c-4831-b069-dd6f8e8d1234
 - Another block
 """
-        page1_path = tmpdir.join("page1.md")
+        page1_path = pages_dir.join("page1.md")
         page1_path.write(page1_content)
 
         page2_content = """# Page 2
 - Reference to block: ((67a45c2e-529c-4831-b069-dd6f8e8d1234))
 - Normal text
 """
-        page2_path = tmpdir.join("page2.md")
+        page2_path = pages_dir.join("page2.md")
         page2_path.write(page2_content)
 
         # Initialize and collect blocks
@@ -479,7 +481,8 @@ class TestBlockReferencesReplacer:
         assert "((67a45c2e-529c-4831-b069-dd6f8e8d1234))" not in result
 
     def test_replace_multiple_references(self, tmpdir):
-        # Create sample files with multiple block IDs and references
+        # Create sample files with multiple block IDs and references in 'pages'
+        pages_dir = tmpdir.mkdir("pages")
         blocks_content = """# Blocks
 - First block
   id:: aaaa1111-2222-3333-4444-555566667777
@@ -489,7 +492,7 @@ class TestBlockReferencesReplacer:
   id:: cccc1111-2222-3333-4444-555566667777
   - Nested item
 """
-        blocks_path = tmpdir.join("blocks.md")
+        blocks_path = pages_dir.join("blocks.md")
         blocks_path.write(blocks_content)
 
         references_content = """# References
@@ -497,7 +500,7 @@ class TestBlockReferencesReplacer:
 - Second reference: ((bbbb1111-2222-3333-4444-555566667777))
 - Combined references: ((aaaa1111-2222-3333-4444-555566667777)) and ((cccc1111-2222-3333-4444-555566667777))
 """
-        references_path = tmpdir.join("references.md")
+        references_path = pages_dir.join("references.md")
         references_path.write(references_content)
 
         # Initialize and collect blocks
@@ -518,11 +521,12 @@ class TestBlockReferencesReplacer:
         )
 
     def test_handle_missing_references(self, tmpdir):
-        # Create a file with a reference to a non-existent block
+        # Create a file with a reference to a non-existent block in 'pages'
+        pages_dir = tmpdir.mkdir("pages")
         content = """# Missing Reference
 - Reference to non-existent block: ((12345678-1234-1234-1234-123456789012))
 """
-        file_path = tmpdir.join("missing.md")
+        file_path = pages_dir.join("missing.md")
         file_path.write(content)
 
         # Initialize and collect blocks (there are none to collect)
@@ -538,13 +542,14 @@ class TestBlockReferencesReplacer:
         assert "((12345678-1234-1234-1234-123456789012))" not in result
 
     def test_handle_embedded_references(self, tmpdir):
-        # Create sample files with block IDs and embedded references
+        # Create sample files with block IDs and embedded references in 'pages'
+        pages_dir = tmpdir.mkdir("pages")
         page1_content = """# Page 1
 - This is a test block
   id:: abcd1234-5678-90ab-cdef-1234567890ab
 - Another block
 """
-        page1_path = tmpdir.join("page1.md")
+        page1_path = pages_dir.join("page1.md")
         page1_path.write(page1_content)
 
         page2_content = """# Page 2
@@ -552,7 +557,7 @@ class TestBlockReferencesReplacer:
 - Embedded reference: {{embed ((abcd1234-5678-90ab-cdef-1234567890ab))}}
 - Normal text
 """
-        page2_path = tmpdir.join("page2.md")
+        page2_path = pages_dir.join("page2.md")
         page2_path.write(page2_content)
 
         # Initialize and collect blocks
@@ -581,3 +586,51 @@ class TestBlockReferencesReplacer:
         assert "Embedded reference:" in result
         assert "This is a test block" in result
         assert "[[Page 1]]" in result
+
+    def test_ignore_nested_journals_and_pages(self, tmpdir):
+        from src.file_handlers.directory_walker import DirectoryWalker
+
+        # Create direct 'pages' and nested 'journals' under a subdirectory
+        pages_dir = tmpdir.mkdir("pages")
+        page_content = (
+            """# Direct Page\n- Block\n  id:: 12345678-1234-1234-1234-1234567890ab\n"""
+        )
+        page_path = pages_dir.join("page.md")
+        page_path.write(page_content)
+
+        # Create a nested 'journals' directory
+        nested_journals = (
+            tmpdir.mkdir("logseq")
+            .mkdir("version-files")
+            .mkdir("incoming")
+            .mkdir("journals")
+        )
+        nested_journal_content = """# Nested Journal\n- Block\n  id:: abcdabcd-abcd-abcd-abcd-abcdabcdabcd\n"""
+        nested_journal_path = nested_journals.join("journal.md")
+        nested_journal_path.write(nested_journal_content)
+
+        # Create a direct 'journals' directory
+        journals_dir = tmpdir.mkdir("journals")
+        journal_content = """# Direct Journal\n- Block\n  id:: 87654321-4321-4321-4321-0987654321ab\n"""
+        journal_path = journals_dir.join("journal.md")
+        journal_path.write(journal_content)
+
+        # Check DirectoryWalker only finds direct children
+        walker = DirectoryWalker(str(tmpdir), str(tmpdir), dry_run=True)
+        found_journals = walker.find_directories("journals")
+        found_pages = walker.find_directories("pages")
+        assert set(found_journals) == {str(journals_dir)}
+        assert set(found_pages) == {str(pages_dir)}
+
+        # Check BlockReferencesReplacer only collects from direct children
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+        assert (
+            "12345678-1234-1234-1234-1234567890ab" in replacer.block_map
+        )  # from direct pages
+        assert (
+            "87654321-4321-4321-4321-0987654321ab" in replacer.block_map
+        )  # from direct journals
+        assert (
+            "abcdabcd-abcd-abcd-abcd-abcdabcdabcd" not in replacer.block_map
+        )  # from nested journals

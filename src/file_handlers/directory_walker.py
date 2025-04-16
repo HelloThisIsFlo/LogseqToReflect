@@ -45,7 +45,7 @@ class DirectoryWalker:
 
     def find_directories(self, dir_name: str) -> List[str]:
         """
-        Find all directories with the given name in the workspace.
+        Find all directories with the given name that are direct children of the workspace.
 
         Args:
             dir_name: Name of directory to find (e.g., "journals", "pages")
@@ -55,9 +55,10 @@ class DirectoryWalker:
         """
         result = []
         try:
-            for root, dirs, _ in os.walk(self.workspace):
-                if dir_name in dirs:
-                    result.append(os.path.join(root, dir_name))
+            # Only look for direct children
+            candidate = os.path.join(self.workspace, dir_name)
+            if os.path.isdir(candidate):
+                result.append(candidate)
         except Exception as e:
             logger.error(f"Error finding directories '{dir_name}': {e}")
 

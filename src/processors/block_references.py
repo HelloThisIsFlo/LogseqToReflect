@@ -81,16 +81,27 @@ class BlockReferencesReplacer(ContentProcessor):
         # Format: {block_id: (text, page_name)}
         self.block_map: Dict[str, Tuple[str, str]] = {}
 
+    def _is_direct_child(self, parent: str, child: str) -> bool:
+        """Return True if 'child' is an immediate subdirectory of 'parent'"""
+        parent = os.path.abspath(parent)
+        child = os.path.abspath(child)
+        return os.path.dirname(child) == parent
+
     def collect_blocks(self, workspace_path: str) -> None:
-        """Scan all files in the workspace to collect block IDs and their text"""
-        for file_path in find_markdown_files(workspace_path):
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-                page_name = self._extract_page_name(file_path, content)
-                self._extract_block_ids(content, page_name)
-            except Exception as e:
-                print(f"Error processing {file_path}: {e}")
+        """Scan only 'journals' and 'pages' directories that are direct children of the workspace for block IDs and their text"""
+        for subdir in ("journals", "pages"):
+            dir_path = os.path.join(workspace_path, subdir)
+            if os.path.isdir(dir_path) and self._is_direct_child(
+                workspace_path, dir_path
+            ):
+                for file_path in find_markdown_files(dir_path):
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        page_name = self._extract_page_name(file_path, content)
+                        self._extract_block_ids(content, page_name)
+                    except Exception as e:
+                        print(f"Error processing {file_path}: {e}")
 
     def _extract_page_name(self, file_path: str, content: str) -> str:
         """Extract the page name from the file path or content"""

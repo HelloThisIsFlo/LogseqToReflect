@@ -77,10 +77,8 @@ class TestDirectoryWalker:
 
         # Find journal directories
         journal_dirs = walker.find_directories("journals")
-        assert len(journal_dirs) == 2
-        paths = {os.path.abspath(d) for d in journal_dirs}
-        assert os.path.join(test_workspace, "journals") in paths
-        assert os.path.join(test_workspace, "nested", "journals") in paths
+        assert len(journal_dirs) == 1
+        assert os.path.join(test_workspace, "journals") in journal_dirs
 
         # Find pages directories
         page_dirs = walker.find_directories("pages")
