@@ -167,23 +167,26 @@ class BlockReferencesReplacer(ContentProcessor):
         )
 
     def _replace_embedded_references(self, content: str) -> str:
-        """Replace embedded block references while preserving indentation and formatting"""
+        """Replace embedded block references while preserving indentation and formatting (optimized)"""
         lines = content.split("\n")
         modified = False
+        # Precompile the embed pattern to extract block_ids
+        embed_pattern = re.compile(
+            r"\{\{embed\s+\(\(([a-f0-9\-]{7,8}-[a-f0-9\-]{4}-[a-f0-9\-]{4}-[a-f0-9\-]{4}-[a-f0-9\-]{12})\)\)\}\}"
+        )
 
         for i, line in enumerate(lines):
-            for block_id, (text, page_name) in self.block_map.items():
-                # Create embedding pattern for this specific block ID
-                embed_pattern = r"\{\{embed\s+\(\(" + re.escape(block_id) + r"\)\)\}\}"
-                embed_match = re.search(embed_pattern, line)
-
-                if embed_match:
+            match = embed_pattern.search(line)
+            if match:
+                block_id = match.group(1)
+                if block_id in self.block_map:
+                    text, page_name = self.block_map[block_id]
                     modified = True
                     # Extract indentation and context
                     indentation = len(line) - len(line.lstrip())
                     indent_spaces = " " * indentation
-                    before_embed = line[: embed_match.start()]
-                    after_embed = line[embed_match.end() :]
+                    before_embed = line[: match.start()]
+                    after_embed = line[match.end() :]
                     line_content = line.lstrip()
                     is_bullet = line_content.startswith("- ")
 
@@ -205,8 +208,6 @@ class BlockReferencesReplacer(ContentProcessor):
                             lines[i] = (
                                 f"{indent_spaces}_{text} ([[{page_name}]])_{after_embed}"
                             )
-                    break  # Only process one embed per line
-
         return "\n".join(lines) if modified else content
 
     def _replace_regular_references(self, content: str) -> str:
