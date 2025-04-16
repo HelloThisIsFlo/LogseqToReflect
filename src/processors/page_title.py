@@ -132,6 +132,8 @@ class PageTitleProcessor(ContentProcessor):
         return None, -1, -1
 
     def process(self, content):
+        # Remove leading blank lines from content
+        content = content.lstrip("\n")
         title, type_found = self._format_title_from_filename()
         main_title = title[2:].strip()  # Remove '# '
         alias_text, alias_start, alias_end = self._extract_alias(content)
@@ -158,16 +160,21 @@ class PageTitleProcessor(ContentProcessor):
         if first_line.startswith("# "):
             lines = content.split("\n")
             lines[0] = title
-            if type_tag_line and (len(lines) == 1 or lines[1].strip() != type_tag_line):
-                lines.insert(1, "")  # Blank line after title
+            # Remove any blank lines after the title
+            while len(lines) > 1 and lines[1].strip() == "":
+                lines.pop(1)
+            if type_tag_line:
+                # Insert type tag after exactly one blank line
+                lines.insert(1, "")
                 lines.insert(2, type_tag_line)
+                # Remove any extra blank lines after the tag
+                while len(lines) > 3 and lines[3].strip() == "":
+                    lines.pop(3)
             new_content = "\n".join(lines)
         else:
+            # Always exactly one blank line after title, and after tag if present
             new_content = f"{title}\n\n"
             if type_tag_line:
-                new_content += f"{type_tag_line}\n"
-            new_content += (
-                "\n"  # Always add a blank line after tag (or after title if no tag)
-            )
+                new_content += f"{type_tag_line}\n\n"
             new_content += f"{content.strip()}"
         return new_content, new_content != content

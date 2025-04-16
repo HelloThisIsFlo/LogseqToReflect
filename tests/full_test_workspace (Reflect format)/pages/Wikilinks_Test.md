@@ -1,6 +1,5 @@
 # Wikilinks Test // Wiki Links Test // Wikilinks Test Page
 
-
 type:: documentation
 category:: testing
 

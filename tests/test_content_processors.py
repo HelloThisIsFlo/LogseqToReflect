@@ -284,6 +284,21 @@ class TestPageTitleProcessor:
             # Should be: # Foo bar Baz
             assert new_content.startswith("# Foo bar Baz\n\n")
 
+    def test_exactly_one_blank_line_after_title_and_tag(self):
+        # Scenario 1: file with leading blank lines and a type tag
+        processor = self.processor("repo___world.md")
+        content = "\n\n- hello"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "# World\n\n#repo\n\n- hello"
+
+        # Scenario 2: file with multiple leading blank lines and no type tag
+        processor = self.processor("My___world.md")
+        content = "\n\n\n- hello"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "# My World\n\n- hello"
+
 
 class TestIndentedBulletPointsProcessor:
     """Tests for the IndentedBulletPointsProcessor class"""

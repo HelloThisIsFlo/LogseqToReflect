@@ -1,6 +1,5 @@
 # Project Alpha
 
-
 tags:: #project, #active
 type:: project
 status:: active
