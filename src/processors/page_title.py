@@ -81,12 +81,20 @@ class PageTitleProcessor(ContentProcessor):
 
     def process(self, content):
         title = self._format_title_from_filename()
+        main_title = title[2:].strip()  # Remove '# '
         alias_text, alias_start, alias_end = self._extract_alias(content)
         if alias_text:
             aliases = [a.strip() for a in alias_text.split(",")]
+            unique_aliases = []
             for alias in aliases:
                 flattened_alias = self._flatten_and_title_case(alias)
-                title = f"{title} // {flattened_alias}"
+                if (
+                    flattened_alias != main_title
+                    and flattened_alias not in unique_aliases
+                ):
+                    unique_aliases.append(flattened_alias)
+            for alias in unique_aliases:
+                title = f"{title} // {alias}"
             content = content[:alias_start] + content[alias_end:]
         first_line = content.strip().split("\n")[0] if content.strip() else ""
         if first_line.startswith("# "):
