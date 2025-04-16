@@ -13,7 +13,7 @@ alwaysApply: true
 - If you _do_ need to install a new package, use: `uv add <package_name>`, never use `pip ..` and never use `uv run pip ...`
 
 # Tests
-- Write tests for each new feature
+- ALWAYS Add unit tests when writing a new feature (or tweaking existing behavior)
 - The tests are under the `tests` directory
 - When writing tests always write them in `pytest` style, never `unittest` style
 - Always run all unit-tests at once (with `uv run pytest`) instead of individual ones. This helps you identify breaking changes early

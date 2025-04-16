@@ -8,3 +8,4 @@ from .empty_content_cleaner import EmptyContentCleaner
 from .indented_bullet_points import IndentedBulletPointsProcessor
 from .page_title import PageTitleProcessor
 from .wikilink import WikiLinkProcessor
+from .properties_processor import PropertiesProcessor

@@ -2,6 +2,7 @@ import os
 from .file_processor import FileProcessor
 from ..processors import (
     LinkProcessor,
+    PropertiesProcessor,
     BlockReferencesCleaner,
     BlockReferencesReplacer,
     TaskCleaner,
@@ -25,6 +26,7 @@ class PageFileProcessor(FileProcessor):
         self.block_references_replacer = block_references_replacer
         self.categories_config = categories_config
         processors = [LinkProcessor()]
+        processors.append(PropertiesProcessor())
         if self.block_references_replacer:
             processors.append(self.block_references_replacer)
         else:

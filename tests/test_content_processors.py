@@ -4,6 +4,7 @@ from src.processors.base import ContentProcessor
 from src.processors.date_header import DateHeaderProcessor
 from src.processors.task_cleaner import TaskCleaner
 from src.processors.link_processor import LinkProcessor
+from src.processors.properties_processor import PropertiesProcessor
 from src.processors.block_references import (
     BlockReferencesCleaner,
     BlockReferencesReplacer,
@@ -92,6 +93,14 @@ class TestLinkProcessor:
         new_content, changed = processor.process(content)
         assert changed is False
         assert content == new_content
+
+    def test_remove_filters_lines(self):
+        processor = PropertiesProcessor()
+        content = 'Text before\nfilters:: {"hello": true}\nText after'
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "filters::" not in new_content
+        assert "Text before\nText after" == new_content
 
 
 class TestBlockReferencesCleaner:
