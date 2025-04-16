@@ -55,7 +55,13 @@ class ConversionStats:
 class LogSeqToReflectConverter:
     """Main converter class to convert LogSeq files to Reflect format"""
 
-    def __init__(self, workspace: str, output_dir: str = None, dry_run: bool = False):
+    def __init__(
+        self,
+        workspace: str,
+        output_dir: str = None,
+        dry_run: bool = False,
+        categories_config: str = None,
+    ):
         """
         Initialize the LogSeq to Reflect converter.
 
@@ -64,16 +70,22 @@ class LogSeqToReflectConverter:
             output_dir: Optional custom output directory. If not provided, will create
                        "<workspace> (Reflect format)" in the same parent directory
             dry_run: If True, show what would be changed without making changes
+            categories_config: Path to categories config directory (types.txt, uppercase.txt)
         """
         self.workspace = os.path.abspath(workspace)
         self.output_dir = self._determine_output_dir(output_dir)
         self.dry_run = dry_run
         self.stats = ConversionStats()
+        self.categories_config = categories_config
 
         # Initialize processors and walker
         self.block_references_replacer = BlockReferencesReplacer()
         self.walker = DirectoryWalker(
-            workspace, self.output_dir, dry_run, self.block_references_replacer
+            workspace,
+            self.output_dir,
+            dry_run,
+            self.block_references_replacer,
+            categories_config=self.categories_config,
         )
 
     def _determine_output_dir(self, output_dir: str = None) -> str:
@@ -166,6 +178,10 @@ def main():
         help="Show what would be done without making changes",
     )
     parser.add_argument(
+        "--categories-config",
+        help="Path to categories config directory (containing types.txt and uppercase.txt)",
+    )
+    parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable verbose output"
     )
 
@@ -182,7 +198,10 @@ def main():
 
     # Run the conversion
     converter = LogSeqToReflectConverter(
-        workspace=args.workspace, output_dir=args.output_dir, dry_run=args.dry_run
+        workspace=args.workspace,
+        output_dir=args.output_dir,
+        dry_run=args.dry_run,
+        categories_config=args.categories_config,
     )
     stats = converter.run()
 

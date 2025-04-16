@@ -1,4 +1,5 @@
 import pytest
+import os
 from src.processors.base import ContentProcessor
 from src.processors.date_header import DateHeaderProcessor
 from src.processors.task_cleaner import TaskCleaner
@@ -11,6 +12,7 @@ from src.processors.page_title import PageTitleProcessor
 from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
 from src.processors.empty_content_cleaner import EmptyContentCleaner
 from src.processors.wikilink import WikiLinkProcessor
+import tempfile
 
 
 class TestDateHeaderProcessor:
@@ -177,43 +179,58 @@ class TestEmptyContentCleaner:
 class TestPageTitleProcessor:
     """Tests for the PageTitleProcessor class"""
 
+    @pytest.fixture(autouse=True)
+    def setup_test_config(self, tmp_path):
+        # Create test uppercase and types config files
+        self.uppercase_path = tmp_path / "uppercase.txt"
+        self.types_path = tmp_path / "types.txt"
+        self.uppercase_path.write_text("AWS\nIAM\nCLI\n")
+        self.types_path.write_text("jira\nrepo\nproject\nmeeting\n")
+
+    def processor(self, filename):
+        return PageTitleProcessor(
+            filename,
+            uppercase_path=str(self.uppercase_path),
+            types_path=str(self.types_path),
+        )
+
     def test_format_simple_filename(self):
-        processor = PageTitleProcessor("simple_page.md")
+        processor = self.processor("simple_page.md")
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# Simple Page\n\n")
 
     def test_format_filename_with_underscores(self):
-        processor = PageTitleProcessor("my_awesome_page.md")
+        processor = self.processor("my_awesome_page.md")
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# My Awesome Page\n\n")
 
     def test_format_filename_with_triple_underscores(self):
-        processor = PageTitleProcessor("folder___page.md")
+        processor = self.processor("folder___page.md")
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# Folder Page\n\n")
 
     def test_title_case_rules(self):
-        processor = PageTitleProcessor("the_importance_of_a_good_title.md")
+        processor = self.processor("the_importance_of_a_good_title.md")
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# The Importance of a Good Title\n\n")
 
     def test_format_filename_with_slashes(self):
-        processor = PageTitleProcessor("aws___iam___role.md")
+        processor = self.processor("aws___iam___role.md")
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content.startswith("# Aws Iam Role\n\n")
+        assert new_content.startswith("# AWS IAM Role\n\n")
 
     def test_aliases_formatting(self):
-        processor = PageTitleProcessor("page.md")
+        processor = self.processor("page.md")
         content = "alias:: first alias, second/alias\nSome content"
         new_content, changed = processor.process(content)
         assert changed is True
@@ -221,12 +238,51 @@ class TestPageTitleProcessor:
         assert "alias::" not in new_content
 
     def test_replace_existing_title(self):
-        processor = PageTitleProcessor("new_page.md")
+        processor = self.processor("new_page.md")
         content = "# Old Title\nSome content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# New Page\n")
         assert "Old Title" not in new_content
+
+    def test_uppercase_term_in_title(self):
+        processor = self.processor("aws___cli___profile.md")
+        content = "Some content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content.startswith("# AWS CLI Profile\n\n")
+
+    def test_type_removal_and_tag(self):
+        processor = self.processor("jira___improve perf on project sentient agents.md")
+        content = "Some content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        # Should match new output format: blank line between title and tag
+        assert new_content.startswith(
+            "# Improve Perf on Project Sentient Agents\n\n#jira\n\n"
+        )
+
+    def test_uppercase_and_type_in_alias(self):
+        processor = self.processor("page.md")
+        content = "alias:: aws/cli, repo/hello world\nSome content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "# Page // AWS CLI // Hello World\n\n" in new_content
+
+    def test_custom_lowercase_config(self):
+        # Create a temporary config directory with a custom lowercase.txt
+        with tempfile.TemporaryDirectory() as config_dir:
+            lowercase_path = os.path.join(config_dir, "lowercase.txt")
+            with open(lowercase_path, "w") as f:
+                f.write("foo\nbar\n")
+            # 'foo' and 'bar' should be lowercased (except first word), others should be title-cased
+            processor = PageTitleProcessor(
+                "foo_bar_baz.md", lowercase_path=lowercase_path
+            )
+            new_content, changed = processor.process("Some content")
+            assert changed is True
+            # Should be: # Foo bar Baz
+            assert new_content.startswith("# Foo bar Baz\n\n")
 
 
 class TestIndentedBulletPointsProcessor:
@@ -269,36 +325,81 @@ class TestIndentedBulletPointsProcessor:
 class TestWikiLinkProcessor:
     """Tests for the WikiLinkProcessor class"""
 
+    @pytest.fixture(autouse=True)
+    def setup_test_config(self, tmp_path):
+        self.uppercase_path = tmp_path / "uppercase.txt"
+        self.types_path = tmp_path / "types.txt"
+        self.uppercase_path.write_text("AWS\nIAM\nCLI\n")
+        self.types_path.write_text("jira\nrepo\nproject\nmeeting\n")
+
+    def processor(self):
+        # Patch the processor to use the test config
+        class PatchedWikiLinkProcessor(WikiLinkProcessor):
+            def __init__(self, uppercase_path, types_path):
+                self.lowercase_words = {
+                    "a",
+                    "an",
+                    "the",
+                    "and",
+                    "but",
+                    "or",
+                    "for",
+                    "nor",
+                    "as",
+                    "at",
+                    "by",
+                    "for",
+                    "from",
+                    "in",
+                    "into",
+                    "near",
+                    "of",
+                    "on",
+                    "onto",
+                    "to",
+                    "with",
+                }
+                self.uppercase_terms = set(
+                    line.strip().upper()
+                    for line in open(uppercase_path)
+                    if line.strip()
+                )
+                self.types = set(
+                    line.strip().lower() for line in open(types_path) if line.strip()
+                )
+
+        return PatchedWikiLinkProcessor(str(self.uppercase_path), str(self.types_path))
+
     def test_format_simple_wikilinks(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "Text with [[simple link]] in the middle"
         new_content, changed = processor.process(content)
         assert changed is True
         assert "Text with [[Simple Link]] in the middle" == new_content
 
     def test_format_wikilinks_with_underscores(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "Check out [[my_awesome_page]] for more info"
         new_content, changed = processor.process(content)
         assert changed is True
         assert "Check out [[My Awesome Page]] for more info" == new_content
 
     def test_format_wikilinks_with_slashes(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "Looking at [[aws/iam/group in space]] documentation"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "Looking at [[Aws Iam Group in Space]] documentation" == new_content
+        assert "Looking at [[AWS IAM Group in Space]] documentation" == new_content
 
     def test_title_case_rules_in_wikilinks(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "See [[the importance of a good title]] page"
         new_content, changed = processor.process(content)
         assert changed is True
         assert "See [[The Importance of a Good Title]] page" == new_content
 
     def test_multiple_wikilinks_in_content(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "- [[first_link]]\n- [[second/third/important_document]]\n- [[the quick brown fox]]"
         new_content, changed = processor.process(content)
         assert changed is True
@@ -308,11 +409,22 @@ class TestWikiLinkProcessor:
         )
 
     def test_no_change_when_no_wikilinks(self):
-        processor = WikiLinkProcessor()
+        processor = self.processor()
         content = "Regular text without wikilinks"
         new_content, changed = processor.process(content)
         assert changed is False
         assert content == new_content
+
+    def test_wikilink_uppercase_and_type(self):
+        processor = self.processor()
+        content = (
+            "Check out [[aws/cli]] and [[repo/hello world]] and [[jira/issue tracker]]"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "[[AWS CLI]]" in new_content
+        assert "[[Hello World]]" in new_content
+        assert "[[Issue Tracker]]" in new_content
 
 
 class TestBlockReferencesReplacer:

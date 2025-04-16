@@ -32,9 +32,9 @@ def test_logseq_workspace():
         )
 
     # Create page files with different formats and features to test
-    with open(os.path.join(pages_dir, "project_notes.md"), "w") as f:
+    with open(os.path.join(pages_dir, "project___Build agents.md"), "w") as f:
         f.write(
-            "alias:: Project Documentation, Notes/Project\n- This is a page with project notes\n- TODO Implement feature\n- ((abcd1234-5678-90ab-cdef-1234567890ab))\n- collapsed:: true\n"
+            "alias:: Build agents doc, agents doc\n- This is a page with project notes\n- TODO Implement feature\n- ((abcd1234-5678-90ab-cdef-1234567890ab))\n- collapsed:: true\n"
         )
 
     with open(os.path.join(pages_dir, "meeting___notes.md"), "w") as f:
@@ -49,8 +49,8 @@ def test_logseq_workspace():
     shutil.rmtree(temp_dir)
 
 
-def run_cli(args):
-    env = os.environ.copy()
+def run_cli(args, env=None):
+    env = env or os.environ.copy()
     env["PYTHONPATH"] = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "src")
     )
@@ -62,22 +62,36 @@ def run_cli(args):
     )
 
 
-def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):
-    """Test the end-to-end conversion process using the main function"""
-    # Set up the output directory
-    output_dir = os.path.join(os.path.dirname(test_logseq_workspace), "output_reflect")
+def test_end_to_end_conversion(test_logseq_workspace, monkeypatch, tmp_path):
+    """Test the end-to-end conversion process using the main function, with a test config for types/uppercase."""
+    # Set up the output directory inside tmp_path
+    output_dir = str(tmp_path / "output_reflect")
 
-    # Mock sys.argv
-    test_args = [
-        "logseq_to_reflect_converter.py",
-        "--workspace",
-        test_logseq_workspace,
-        "--output-dir",
-        output_dir,
-    ]
-    monkeypatch.setattr(sys, "argv", test_args)
+    # Set up a test config directory
+    config_dir = tmp_path / "test_categories_config"
+    config_dir.mkdir()
+    (config_dir / "types.txt").write_text("repo\njira\nproject\nmeeting\n")
+    (config_dir / "uppercase.txt").write_text("AWS\nIAM\nCLI\n")
+    (config_dir / "lowercase.txt").write_text(
+        "a\nan\nthe\nand\nbut\nor\nfor\nnor\nas\nat\nby\nfor\nfrom\nin\ninto\nnear\nof\non\nonto\nto\nwith\n"
+    )
 
-    # Import the module containing the main function
+    # Patch sys.argv to use the temp output dir and pass categories config
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "logseq_to_reflect_converter.py",
+            "--workspace",
+            test_logseq_workspace,
+            "--output-dir",
+            output_dir,
+            "--categories-config",
+            str(config_dir),
+        ],
+    )
+
+    # Import the module containing the main function (AFTER env is set)
     spec = importlib.util.spec_from_file_location(
         "converter",
         os.path.join(
@@ -104,7 +118,7 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):
 
     # Check page files
     page_files = os.listdir(os.path.join(output_dir, "pages"))
-    assert "project_notes.md" in page_files
+    assert "project___Build agents.md" in page_files
     assert "meeting___notes.md" in page_files
 
     # Verify journal content transformations
@@ -121,16 +135,20 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):
         assert "- [ ] Working on project" in content
 
     # Verify page content transformations
-    with open(os.path.join(output_dir, "pages", "project_notes.md"), "r") as f:
+    with open(os.path.join(output_dir, "pages", "project___Build agents.md"), "r") as f:
         content = f.read()
-        assert "# Project Notes // Project Documentation // Notes Project" in content
+        # Now expects type removal and #project tag
+        assert "Agents Doc" in content
+        assert "#project" in content
         assert "- [ ] Implement feature" in content
         assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in content
         assert "collapsed:: true" not in content
 
     with open(os.path.join(output_dir, "pages", "meeting___notes.md"), "r") as f:
         content = f.read()
-        assert "# Meeting Notes" in content
+        # Now expects type removal and #meeting tag
+        assert "# Notes" in content
+        assert "#meeting" in content
         assert "id::" not in content
         assert "- [x] Review project timeline" in content
         assert "{{query" not in content

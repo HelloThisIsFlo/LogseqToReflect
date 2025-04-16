@@ -20,8 +20,10 @@ class PageFileProcessor(FileProcessor):
         self,
         block_references_replacer: Optional[BlockReferencesReplacer] = None,
         dry_run: bool = False,
+        categories_config: str = None,
     ):
         self.block_references_replacer = block_references_replacer
+        self.categories_config = categories_config
         processors = [LinkProcessor()]
         if self.block_references_replacer:
             processors.append(self.block_references_replacer)
@@ -32,7 +34,11 @@ class PageFileProcessor(FileProcessor):
                 TaskCleaner(),
                 EmptyContentCleaner(),
                 IndentedBulletPointsProcessor(),
-                WikiLinkProcessor(),
+                (
+                    WikiLinkProcessor(categories_config=categories_config)
+                    if categories_config
+                    else WikiLinkProcessor()
+                ),
             ]
         )
         super().__init__(processors, dry_run)
@@ -47,7 +53,18 @@ class PageFileProcessor(FileProcessor):
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
             # Add PageTitleProcessor with the correct filename at the start
-            title_processor = PageTitleProcessor(os.path.basename(file_path))
+            if self.categories_config:
+                uppercase_path = os.path.join(self.categories_config, "uppercase.txt")
+                types_path = os.path.join(self.categories_config, "types.txt")
+                lowercase_path = os.path.join(self.categories_config, "lowercase.txt")
+                title_processor = PageTitleProcessor(
+                    os.path.basename(file_path),
+                    uppercase_path=uppercase_path,
+                    types_path=types_path,
+                    lowercase_path=lowercase_path,
+                )
+            else:
+                title_processor = PageTitleProcessor(os.path.basename(file_path))
             new_content, content_changed = title_processor.process(content)
             new_content, changed = self.pipeline.process(new_content)
             content_changed = content_changed or changed

@@ -1,12 +1,40 @@
 from .base import ContentProcessor
 import re
 from typing import List
+import os
+
+# Use environment variables for config paths if set, else default
+CATEGORIES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "..", "categories_config"
+)
+UPPERCASE_PATH = os.environ.get(
+    "LOGSEQ2REFLECT_UPPERCASE_PATH", os.path.join(CATEGORIES_DIR, "uppercase.txt")
+)
+TYPES_PATH = os.environ.get(
+    "LOGSEQ2REFLECT_TYPES_PATH", os.path.join(CATEGORIES_DIR, "types.txt")
+)
+
+
+def load_uppercase_terms(uppercase_path=UPPERCASE_PATH):
+    try:
+        with open(uppercase_path, "r", encoding="utf-8") as f:
+            return set(line.strip().upper() for line in f if line.strip())
+    except Exception:
+        return set()
+
+
+def load_types(types_path=TYPES_PATH):
+    try:
+        with open(types_path, "r", encoding="utf-8") as f:
+            return set(line.strip().lower() for line in f if line.strip())
+    except Exception:
+        return set()
 
 
 class WikiLinkProcessor(ContentProcessor):
     """Process wikilinks using the same formatting rules as page titles"""
 
-    def __init__(self):
+    def __init__(self, categories_config: str = None):
         self.lowercase_words = {
             "a",
             "an",
@@ -30,27 +58,37 @@ class WikiLinkProcessor(ContentProcessor):
             "to",
             "with",
         }
+        if categories_config:
+            uppercase_path = os.path.join(categories_config, "uppercase.txt")
+            types_path = os.path.join(categories_config, "types.txt")
+            self.uppercase_terms = load_uppercase_terms(uppercase_path)
+            self.types = load_types(types_path)
+        else:
+            self.uppercase_terms = load_uppercase_terms()
+            self.types = load_types()
 
     def _title_case_words(self, words: List[str]) -> List[str]:
         """Apply title case rules to a list of words"""
         if not words:
             return []
-
-        # First word is always capitalized
-        result = [words[0].capitalize()]
-
-        # Middle words follow lowercase rules
-        for word in words[1:-1] if len(words) > 1 else []:
-            if word.lower() in self.lowercase_words:
-                result.append(word.lower())
-            else:
-                result.append(word.capitalize())
-
-        # Last word is always capitalized
+        # First word always capitalized (or uppercased if in list)
+        result = [
+            self._maybe_uppercase(words[0], is_first=True, is_last=(len(words) == 1))
+        ]
+        for i, word in enumerate(words[1:-1] if len(words) > 1 else []):
+            result.append(self._maybe_uppercase(word, is_first=False, is_last=False))
         if len(words) > 1:
-            result.append(words[-1].capitalize())
-
+            result.append(
+                self._maybe_uppercase(words[-1], is_first=False, is_last=True)
+            )
         return result
+
+    def _maybe_uppercase(self, word, is_first=False, is_last=False):
+        if word.upper() in self.uppercase_terms:
+            return word.upper()
+        if not is_first and word.lower() in self.lowercase_words and not is_last:
+            return word.lower()
+        return word.capitalize()
 
     def _title_case(self, text: str) -> str:
         """Apply title case to a text string"""
@@ -74,7 +112,11 @@ class WikiLinkProcessor(ContentProcessor):
         return "/".join(path_parts)
 
     def _flatten_and_title_case(self, text: str) -> str:
-        flat = text.replace("___", " ").replace("/", " ").replace("_", " ")
+        parts = re.split(r"___|/|_", text)
+        parts = [p.strip() for p in parts if p.strip()]
+        # Remove type if present
+        parts = [p for p in parts if p.lower() not in self.types]
+        flat = " ".join(parts)
         flat = re.sub(r"\s+", " ", flat).strip()
         return self._title_case(flat)
 

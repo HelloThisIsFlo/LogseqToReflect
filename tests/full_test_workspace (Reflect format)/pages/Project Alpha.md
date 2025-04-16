@@ -1,5 +1,6 @@
 # Project Alpha
 
+
 tags:: #project, #active
 type:: project
 status:: active
@@ -11,7 +12,7 @@ status:: active
 ## Objectives
 - Create a scalable application for [[Data Analysis]]
 - Implement modern UI with [[React]] and [[Typescript]]
-- Integrate with [[Aws]] services
+- Integrate with [[AWS]] services
 
 ## Team Members
 - [[Jane Smith]] - Project Lead

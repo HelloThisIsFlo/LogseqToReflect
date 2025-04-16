@@ -22,6 +22,7 @@ class JournalFileProcessor(FileProcessor):
         self,
         block_references_replacer: Optional[BlockReferencesReplacer] = None,
         dry_run: bool = False,
+        categories_config: str = None,  # Accept for compatibility
     ):
         self.block_references_replacer = block_references_replacer
         processors = [LinkProcessor()]

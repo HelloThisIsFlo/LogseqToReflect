@@ -1,5 +1,6 @@
 # Meeting Notes
 
+
 type:: notes
 category:: meetings
 created:: [[Feb 15th, 2025]]

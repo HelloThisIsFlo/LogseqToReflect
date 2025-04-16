@@ -1,5 +1,6 @@
 # Wikilinks Test // Wiki Links Test // Wikilinks Test Page
 
+
 type:: documentation
 category:: testing
 
@@ -11,7 +12,7 @@ category:: testing
 - Title case test: [[The Importance of Good Formatting]]
 
 ## Hierarchical Links
-- Path with lowercase parts: [[Aws Iam Group in Space]] <- Should be [[Aws Iam Group in Space]]
+- Path with lowercase parts: [[AWS IAM Group in Space]] <- Should be [[AWS IAM Group in Space]]
 - Multiple levels: [[Project Documentation User Guide]]
 - Mixed case test: [[The Quick Brown Fox]]
 

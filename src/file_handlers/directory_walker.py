@@ -21,6 +21,7 @@ class DirectoryWalker:
         output_dir: str,
         dry_run: bool = False,
         block_references_replacer: Optional[BlockReferencesReplacer] = None,
+        categories_config: str = None,
     ):
         """
         Initialize DirectoryWalker for processing LogSeq files.
@@ -30,14 +31,17 @@ class DirectoryWalker:
             output_dir: The output directory for converted files
             dry_run: If True, don't actually write any files
             block_references_replacer: Optional block references processor
+            categories_config: Optional categories configuration
         """
         self.workspace = os.path.abspath(workspace)
         self.output_dir = output_dir
         self.dry_run = dry_run
         self.journal_processor = JournalFileProcessor(
-            block_references_replacer, dry_run
+            block_references_replacer, dry_run, categories_config=categories_config
         )
-        self.page_processor = PageFileProcessor(block_references_replacer, dry_run)
+        self.page_processor = PageFileProcessor(
+            block_references_replacer, dry_run, categories_config=categories_config
+        )
 
     def find_directories(self, dir_name: str) -> List[str]:
         """
