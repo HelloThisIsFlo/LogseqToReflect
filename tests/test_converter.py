@@ -125,16 +125,17 @@ class TestLogSeqToReflectConverter:
 
         # Verify results
         assert os.path.exists(output_dir)
-        assert os.path.exists(os.path.join(output_dir, "journals"))
-        assert os.path.exists(os.path.join(output_dir, "pages"))
+        # No subfolders for journals or pages
+        assert not os.path.exists(os.path.join(output_dir, "journals"))
+        assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-        # Check journal files were converted
-        assert os.path.exists(os.path.join(output_dir, "journals", "2023-01-01.md"))
-        assert os.path.exists(os.path.join(output_dir, "journals", "2023-01-02.md"))
+        # Check journal files were converted (flat)
+        assert os.path.exists(os.path.join(output_dir, "2023-01-01.md"))
+        assert os.path.exists(os.path.join(output_dir, "2023-01-02.md"))
 
-        # Check page files were converted
-        assert os.path.exists(os.path.join(output_dir, "pages", "test_page.md"))
-        assert os.path.exists(os.path.join(output_dir, "pages", "another_page.md"))
+        # Check page files were converted (flat)
+        assert os.path.exists(os.path.join(output_dir, "test_page.md"))
+        assert os.path.exists(os.path.join(output_dir, "another_page.md"))
 
         # Check stats
         assert stats.journal_files_processed == 2

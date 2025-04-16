@@ -94,29 +94,21 @@ class DirectoryWalker:
         Returns:
             Tuple of (total_files, content_changed, renamed)
         """
-        # Compute relative path for output directory
-        rel_path = os.path.relpath(journal_dir, self.workspace)
-        output_journal_dir = os.path.join(self.output_dir, rel_path)
-
-        # Create output directory if needed
-        if not self._ensure_output_directory(output_journal_dir):
+        # All output files go directly to self.output_dir
+        if not self._ensure_output_directory(self.output_dir):
             return 0, 0, 0
 
-        # Initialize counters
         total_files = 0
         content_changed = 0
         renamed = 0
 
         logger.info(f"Processing journal directory: {journal_dir}")
-        logger.info(f"Output directory: {output_journal_dir}")
+        logger.info(f"Output directory: {self.output_dir}")
 
-        # Process each file
         try:
             for file_path in find_markdown_files(journal_dir):
-                # Compute output root for each file
-                relative_root = os.path.relpath(os.path.dirname(file_path), journal_dir)
-                output_root = os.path.join(output_journal_dir, relative_root)
-
+                # Output root is always the output_dir (flat)
+                output_root = self.output_dir
                 try:
                     content_change, file_renamed = self.journal_processor.process_file(
                         file_path, output_root
@@ -143,31 +135,21 @@ class DirectoryWalker:
         Returns:
             Tuple of (total_files, content_changed)
         """
-        # Compute relative path for output directory
-        rel_path = os.path.relpath(pages_dir, self.workspace)
-        output_pages_dir = os.path.join(self.output_dir, rel_path)
-
-        # Create output directory if needed
-        if not self._ensure_output_directory(output_pages_dir):
+        # All output files go directly to self.output_dir
+        if not self._ensure_output_directory(self.output_dir):
             return 0, 0
 
-        # Initialize counters
         total_files = 0
         content_changed = 0
 
         logger.info(f"Processing pages directory: {pages_dir}")
-        logger.info(f"Output directory: {output_pages_dir}")
+        logger.info(f"Output directory: {self.output_dir}")
 
-        # Process each file
         try:
             for file_path in find_markdown_files(pages_dir):
-                # Compute output paths
-                relative_root = os.path.relpath(os.path.dirname(file_path), pages_dir)
-                output_root = os.path.join(output_pages_dir, relative_root)
-                output_path = os.path.join(output_root, os.path.basename(file_path))
-
+                # Output path is always in the output_dir (flat)
+                output_path = os.path.join(self.output_dir, os.path.basename(file_path))
                 try:
-                    # Ensure parent directories exist
                     if not self.dry_run:
                         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 

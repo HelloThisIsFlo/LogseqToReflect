@@ -108,45 +108,43 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch, tmp_path):
 
     # Verify output directory structure
     assert os.path.exists(output_dir)
-    assert os.path.exists(os.path.join(output_dir, "journals"))
-    assert os.path.exists(os.path.join(output_dir, "pages"))
+    # No subfolders for journals or pages
+    assert not os.path.exists(os.path.join(output_dir, "journals"))
+    assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-    # Check journal files
-    journal_files = os.listdir(os.path.join(output_dir, "journals"))
+    # Check journal files (flat)
+    journal_files = os.listdir(output_dir)
     assert "2023-01-01.md" in journal_files
     assert "2023-02-14.md" in journal_files
 
-    # Check page files
-    page_files = os.listdir(os.path.join(output_dir, "pages"))
-    assert "project___Build agents.md" in page_files
-    assert "meeting___notes.md" in page_files
+    # Check page files (flat)
+    assert "project___Build agents.md" in journal_files
+    assert "meeting___notes.md" in journal_files
 
     # Verify journal content transformations
-    with open(os.path.join(output_dir, "journals", "2023-01-01.md"), "r") as f:
+    with open(os.path.join(output_dir, "2023-01-01.md"), "r") as f:
         content = f.read()
         assert "# Sun, January 1st, 2023" in content
         assert "- [ ] Task 1" in content
         assert "- [x] Task 2" in content
 
-    with open(os.path.join(output_dir, "journals", "2023-02-14.md"), "r") as f:
+    with open(os.path.join(output_dir, "2023-02-14.md"), "r") as f:
         content = f.read()
         assert "# Tue, February 14th, 2023" in content
         assert ":LOGBOOK:" not in content
         assert "- [ ] Working on project" in content
 
     # Verify page content transformations
-    with open(os.path.join(output_dir, "pages", "project___Build agents.md"), "r") as f:
+    with open(os.path.join(output_dir, "project___Build agents.md"), "r") as f:
         content = f.read()
-        # Now expects type removal and #project tag
         assert "Agents Doc" in content
         assert "#project" in content
         assert "- [ ] Implement feature" in content
         assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in content
         assert "collapsed:: true" not in content
 
-    with open(os.path.join(output_dir, "pages", "meeting___notes.md"), "r") as f:
+    with open(os.path.join(output_dir, "meeting___notes.md"), "r") as f:
         content = f.read()
-        # Now expects type removal and #meeting tag
         assert "# Notes" in content
         assert "#meeting" in content
         assert "id::" not in content
@@ -244,15 +242,24 @@ def test_full_workspace_conversion(monkeypatch):
     try:
         # Verify output directory structure was created
         assert os.path.exists(output_dir)
-        assert os.path.exists(os.path.join(output_dir, "journals"))
-        assert os.path.exists(os.path.join(output_dir, "pages"))
+        # No subfolders for journals or pages
+        assert not os.path.exists(os.path.join(output_dir, "journals"))
+        assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-        # Check that journal files exist and have been processed
-        journal_files = os.listdir(os.path.join(output_dir, "journals"))
+        # Check that journal files exist and have been processed (flat)
+        journal_files = [
+            f
+            for f in os.listdir(output_dir)
+            if f.endswith(".md") and re.match(r"\d{4}-\d{2}-\d{2}\.md", f)
+        ]
         assert len(journal_files) > 0  # Make sure there's at least one journal file
 
-        # Check that page files exist and have been processed
-        page_files = os.listdir(os.path.join(output_dir, "pages"))
+        # Check that page files exist and have been processed (flat)
+        page_files = [
+            f
+            for f in os.listdir(output_dir)
+            if f.endswith(".md") and not re.match(r"\d{4}-\d{2}-\d{2}\.md", f)
+        ]
         assert len(page_files) > 0  # Make sure there's at least one page file
 
         # Verify journal files were renamed correctly (from YYYY_MM_DD.md to YYYY-MM-DD.md)
@@ -264,7 +271,7 @@ def test_full_workspace_conversion(monkeypatch):
         # Sample check of content transformation
         # Check the first journal file
         if journal_files:
-            first_journal = os.path.join(output_dir, "journals", journal_files[0])
+            first_journal = os.path.join(output_dir, journal_files[0])
             with open(first_journal, "r") as f:
                 content = f.read()
                 # Should have a date header
@@ -278,7 +285,7 @@ def test_full_workspace_conversion(monkeypatch):
 
         # Check page title formatting
         if page_files:
-            first_page = os.path.join(output_dir, "pages", page_files[0])
+            first_page = os.path.join(output_dir, page_files[0])
             with open(first_page, "r") as f:
                 content = f.read()
                 lines = content.strip().split("\n")
@@ -290,9 +297,7 @@ def test_full_workspace_conversion(monkeypatch):
                 # Look for a file with ___ in its name to check slash formatting
                 special_format_files = [f for f in page_files if "___" in f]
                 if special_format_files:
-                    special_page = os.path.join(
-                        output_dir, "pages", special_format_files[0]
-                    )
+                    special_page = os.path.join(output_dir, special_format_files[0])
                     with open(special_page, "r") as f:
                         content = f.read()
                         lines = content.strip().split("\n")

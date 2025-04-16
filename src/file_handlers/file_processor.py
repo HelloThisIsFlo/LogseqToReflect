@@ -27,7 +27,14 @@ class FileProcessor:
                 print(f"Would save to {output_path}")
                 return content_changed, True
             else:
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                output_dir = os.path.dirname(output_path)
+                # Only create the directory if it's not the root output directory (avoid empty 'journals'/'pages')
+                if (
+                    output_dir
+                    and output_dir != "."
+                    and not os.path.samefile(output_dir, os.getcwd())
+                ):
+                    os.makedirs(output_dir, exist_ok=True)
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
                 return content_changed, True

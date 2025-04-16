@@ -120,14 +120,13 @@ class TestDirectoryWalker:
         assert content_changed == 2
         assert renamed == 2
 
-        # Check files are created
-        output_journal_dir = os.path.join(output_dir, "journals")
-        assert os.path.exists(output_journal_dir)
-        assert os.path.exists(os.path.join(output_journal_dir, "2023-01-01.md"))
-        assert os.path.exists(os.path.join(output_journal_dir, "2023-01-02.md"))
+        # Check files are created (flat)
+        assert os.path.exists(output_dir)
+        assert os.path.exists(os.path.join(output_dir, "2023-01-01.md"))
+        assert os.path.exists(os.path.join(output_dir, "2023-01-02.md"))
 
         # Check content is transformed
-        with open(os.path.join(output_journal_dir, "2023-01-01.md"), "r") as f:
+        with open(os.path.join(output_dir, "2023-01-01.md"), "r") as f:
             content = f.read()
             assert "# Sun, January 1st, 2023" in content
             assert "- [ ] Task 1" in content
@@ -159,20 +158,19 @@ class TestDirectoryWalker:
         assert total_files == 2
         assert content_changed == 2
 
-        # Check files are created
-        output_pages_dir = os.path.join(output_dir, "pages")
-        assert os.path.exists(output_pages_dir)
-        assert os.path.exists(os.path.join(output_pages_dir, "test_page.md"))
-        assert os.path.exists(os.path.join(output_pages_dir, "another_page.md"))
+        # Check files are created (flat)
+        assert os.path.exists(output_dir)
+        assert os.path.exists(os.path.join(output_dir, "test_page.md"))
+        assert os.path.exists(os.path.join(output_dir, "another_page.md"))
 
         # Check content is transformed
-        with open(os.path.join(output_pages_dir, "test_page.md"), "r") as f:
+        with open(os.path.join(output_dir, "test_page.md"), "r") as f:
             content = f.read()
             assert "# Test Page // Test Alias" in content
             assert "- [ ] Task 1" in content
             assert "alias::" not in content
 
-        with open(os.path.join(output_pages_dir, "another_page.md"), "r") as f:
+        with open(os.path.join(output_dir, "another_page.md"), "r") as f:
             content = f.read()
             assert "# Another Page" in content
             assert "- [x] Task 2" in content
