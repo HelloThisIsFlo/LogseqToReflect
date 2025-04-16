@@ -73,10 +73,15 @@ class WikiLinkProcessor(ContentProcessor):
 
         return "/".join(path_parts)
 
+    def _flatten_and_title_case(self, text: str) -> str:
+        flat = text.replace("___", " ").replace("/", " ").replace("_", " ")
+        flat = re.sub(r"\s+", " ", flat).strip()
+        return self._title_case(flat)
+
     def _format_wikilink(self, match):
         """Format a wikilink match"""
         link_text = match.group(1)
-        formatted_text = self._format_path_with_slashes(link_text)
+        formatted_text = self._flatten_and_title_case(link_text)
         return f"[[{formatted_text}]]"
 
     def process(self, content):

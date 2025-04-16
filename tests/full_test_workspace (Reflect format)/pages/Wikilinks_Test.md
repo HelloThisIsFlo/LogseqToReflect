@@ -1,4 +1,4 @@
-# Wikilinks Test // Wiki Links Test // wikilinks/Test page
+# Wikilinks Test // Wiki Links Test // Wikilinks Test Page
 
 type:: documentation
 category:: testing
@@ -7,20 +7,20 @@ category:: testing
 
 ## Simple Links
 - Basic wikilink: [[Simple Link]]
-- With underscores: [[My_awesome_page]]
+- With underscores: [[My Awesome Page]]
 - Title case test: [[The Importance of Good Formatting]]
 
 ## Hierarchical Links
-- Path with lowercase parts: [[aws/iam/Group in Space]] <- Should be [[aws/iam/Group in Space]]
-- Multiple levels: [[project/documentation/User Guide]]
-- Mixed case test: [[the/quick/Brown Fox]]
+- Path with lowercase parts: [[Aws Iam Group in Space]] <- Should be [[Aws Iam Group in Space]]
+- Multiple levels: [[Project Documentation User Guide]]
+- Mixed case test: [[The Quick Brown Fox]]
 
 ## Special Cases
-- Link inside a task: TODO Check the [[database/Table Schema]] <- Should title case
+- Link inside a task: TODO Check the [[Database Table Schema]] <- Should title case
 - Link in an indented bullet:
-- This has a [[nested/Link in Text]]
-- Another with [[Complex_name_with_underscores]] <- Should keep as is
+- This has a [[Nested Link in Text]]
+- Another with [[Complex Name with Underscores]] <- Should keep as is
 
 ## Reference Examples
-- See also [[database/backups/Daily Schedule]] for more information
+- See also [[Database Backups Daily Schedule]] for more information
 - Related: [[The Quick Brown Fox]] jumped over [[The Lazy Dog]]

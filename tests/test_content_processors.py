@@ -196,7 +196,7 @@ class TestPageTitleProcessor:
         content = "Some content"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content.startswith("# folder/Page\n\n")
+        assert new_content.startswith("# Folder Page\n\n")
 
     def test_title_case_rules(self):
         processor = PageTitleProcessor("the_importance_of_a_good_title.md")
@@ -205,12 +205,19 @@ class TestPageTitleProcessor:
         assert changed is True
         assert new_content.startswith("# The Importance of a Good Title\n\n")
 
+    def test_format_filename_with_slashes(self):
+        processor = PageTitleProcessor("aws___iam___role.md")
+        content = "Some content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content.startswith("# Aws Iam Role\n\n")
+
     def test_aliases_formatting(self):
         processor = PageTitleProcessor("page.md")
         content = "alias:: first alias, second/alias\nSome content"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "# Page // First Alias // second/Alias\n\n" in new_content
+        assert "# Page // First Alias // Second Alias\n\n" in new_content
         assert "alias::" not in new_content
 
     def test_replace_existing_title(self):
@@ -274,14 +281,14 @@ class TestWikiLinkProcessor:
         content = "Check out [[my_awesome_page]] for more info"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "Check out [[My_awesome_page]] for more info" == new_content
+        assert "Check out [[My Awesome Page]] for more info" == new_content
 
     def test_format_wikilinks_with_slashes(self):
         processor = WikiLinkProcessor()
         content = "Looking at [[aws/iam/group in space]] documentation"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "Looking at [[aws/iam/Group in Space]] documentation" == new_content
+        assert "Looking at [[Aws Iam Group in Space]] documentation" == new_content
 
     def test_title_case_rules_in_wikilinks(self):
         processor = WikiLinkProcessor()
@@ -296,7 +303,7 @@ class TestWikiLinkProcessor:
         new_content, changed = processor.process(content)
         assert changed is True
         assert (
-            "- [[First_link]]\n- [[second/third/Important_document]]\n- [[The Quick Brown Fox]]"
+            "- [[First Link]]\n- [[Second Third Important Document]]\n- [[The Quick Brown Fox]]"
             == new_content
         )
 

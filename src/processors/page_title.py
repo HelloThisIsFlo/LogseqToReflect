@@ -49,17 +49,13 @@ class PageTitleProcessor(ContentProcessor):
         return " ".join(result)
 
     def _format_title_from_filename(self):
-        """Format the title based on the filename without the extension"""
+        """Format the title based on the filename without the extension, flattening any hierarchy"""
         base_name = os.path.splitext(self.filename)[0]
-        if "___" in base_name:
-            parts = base_name.split("___")
-            parts = [p for p in parts[:-1]] + [parts[-1].capitalize()]
-            return f"# {'/'.join(parts)}"
-        else:
-            if base_name:
-                text = base_name.replace("_", " ")
-                base_name = self._title_case(text)
-            return f"# {base_name}"
+        # Replace triple underscores and slashes with spaces, then single underscores with spaces
+        flat_name = base_name.replace("___", " ").replace("/", " ").replace("_", " ")
+        flat_name = re.sub(r"\s+", " ", flat_name).strip()
+        flat_name = self._title_case(flat_name)
+        return f"# {flat_name}"
 
     def _capitalize_with_slash_rules(self, text):
         """Apply capitalization rules, handling slash-separated text specially"""
@@ -69,6 +65,12 @@ class PageTitleProcessor(ContentProcessor):
             return "/".join(parts)
         else:
             return self._title_case(text)
+
+    def _flatten_and_title_case(self, text):
+        """Flatten any hierarchy and apply title case (for aliases and titles)"""
+        flat = text.replace("___", " ").replace("/", " ").replace("_", " ")
+        flat = re.sub(r"\s+", " ", flat).strip()
+        return self._title_case(flat)
 
     def _extract_alias(self, content):
         """Extract the alias from the content if it exists"""
@@ -83,8 +85,8 @@ class PageTitleProcessor(ContentProcessor):
         if alias_text:
             aliases = [a.strip() for a in alias_text.split(",")]
             for alias in aliases:
-                capitalized_alias = self._capitalize_with_slash_rules(alias)
-                title = f"{title} // {capitalized_alias}"
+                flattened_alias = self._flatten_and_title_case(alias)
+                title = f"{title} // {flattened_alias}"
             content = content[:alias_start] + content[alias_end:]
         first_line = content.strip().split("\n")[0] if content.strip() else ""
         if first_line.startswith("# "):

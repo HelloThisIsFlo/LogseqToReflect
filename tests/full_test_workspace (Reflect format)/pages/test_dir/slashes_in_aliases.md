@@ -1,3 +1,3 @@
-# Slashes in Aliases // micro/Services // backend/Api
+# Slashes in Aliases // Micro Services // Backend Api
 
 This is a test page with slashes in aliases.

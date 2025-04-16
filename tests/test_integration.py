@@ -123,14 +123,14 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch):
     # Verify page content transformations
     with open(os.path.join(output_dir, "pages", "project_notes.md"), "r") as f:
         content = f.read()
-        assert "# Project Notes // Project Documentation // Notes/Project" in content
+        assert "# Project Notes // Project Documentation // Notes Project" in content
         assert "- [ ] Implement feature" in content
         assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in content
         assert "collapsed:: true" not in content
 
     with open(os.path.join(output_dir, "pages", "meeting___notes.md"), "r") as f:
         content = f.read()
-        assert "# meeting/Notes" in content
+        assert "# Meeting Notes" in content
         assert "id::" not in content
         assert "- [x] Review project timeline" in content
         assert "{{query" not in content
@@ -279,9 +279,13 @@ def test_full_workspace_conversion(monkeypatch):
                         content = f.read()
                         lines = content.strip().split("\n")
                         title = lines[0][2:]  # Remove "# " prefix
+                        # Now expect no slashes, just flattened title
                         assert (
-                            "/" in title
-                        ), f"Title for file with ___ ({special_format_files[0]}) doesn't contain expected slash format"
+                            "/" not in title
+                        ), f"Title for file with ___ ({special_format_files[0]}) should not contain slashes anymore"
+                        assert (
+                            " " in title
+                        ), f"Title for file with ___ ({special_format_files[0]}) should be space-separated"
 
         print(f"\nConverted workspace created at: {output_dir}")
         print(
