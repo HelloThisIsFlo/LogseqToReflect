@@ -13,6 +13,7 @@ from ..processors import (
     WikiLinkProcessor,
     DateHeaderProcessor,
 )
+from ..processors.ordered_list_processor import OrderedListProcessor
 from typing import Optional
 
 
@@ -28,6 +29,7 @@ class JournalFileProcessor(FileProcessor):
         self.block_references_replacer = block_references_replacer
         processors = [LinkProcessor()]
         processors.append(PropertiesProcessor())
+        processors.append(OrderedListProcessor())
         if self.block_references_replacer:
             processors.append(self.block_references_replacer)
         else:

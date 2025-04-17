@@ -15,6 +15,7 @@ from src.processors.empty_content_cleaner import EmptyContentCleaner
 from src.processors.wikilink import WikiLinkProcessor
 import tempfile
 from src.file_handlers.directory_walker import DirectoryWalker
+from src.processors.ordered_list_processor import OrderedListProcessor
 
 
 class TestDateHeaderProcessor:
@@ -66,6 +67,21 @@ class TestTaskCleaner:
         new_content, changed = processor.process(content)
         assert changed is False
         assert content == new_content
+
+    def test_convert_cancelled_tasks(self):
+        processor = TaskCleaner()
+        content = "- CANCELLED Task 1\n- CANCELED Task 2"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        expected = "- [x] ~~Task 1~~\n- [x] ~~Task 2~~"
+        assert new_content == expected
+
+    def test_convert_waiting_tasks(self):
+        processor = TaskCleaner()
+        content = "- WAITING Task 3"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "- [ ] Task 3"
 
 
 class TestLinkProcessor:
@@ -643,3 +659,27 @@ class TestBlockReferencesReplacer:
         assert (
             "abcdabcd-abcd-abcd-abcd-abcdabcdabcd" not in replacer.block_map
         )  # from nested journals
+
+
+class TestOrderedListProcessor:
+    """Tests for the OrderedListProcessor class"""
+
+    def test_convert_ordered_list_property(self):
+        processor = OrderedListProcessor()
+        content = (
+            "- Ordered subitem one\n"
+            "  logseq.order-list-type:: number\n"
+            "- Ordered subitem two\n"
+            "  logseq.order-list-type:: number\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        expected = "1. Ordered subitem one\n" "1. Ordered subitem two\n"
+        assert new_content == expected
+
+    def test_no_change_without_order_property(self):
+        processor = OrderedListProcessor()
+        content = "- Simple bullet\n- Another bullet\n"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert new_content == content

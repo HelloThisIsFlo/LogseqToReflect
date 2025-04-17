@@ -11,6 +11,7 @@ from ..processors import (
     PageTitleProcessor,
     WikiLinkProcessor,
 )
+from ..processors.ordered_list_processor import OrderedListProcessor
 from typing import Optional
 
 
@@ -27,6 +28,7 @@ class PageFileProcessor(FileProcessor):
         self.categories_config = categories_config
         processors = [LinkProcessor()]
         processors.append(PropertiesProcessor())
+        processors.append(OrderedListProcessor())
         if self.block_references_replacer:
             processors.append(self.block_references_replacer)
         else:
