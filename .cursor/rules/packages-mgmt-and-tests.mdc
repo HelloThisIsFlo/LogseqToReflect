@@ -3,8 +3,17 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Instructions
+
+- You are an agent - please keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user. Only terminate your turn when you are sure that the problem is solved.
+- You MUST plan extensively before each function call, and reflect extensively on the outcomes of the previous function calls. DO NOT do this entire process by making function calls only, as this can impair your ability to solve the problem and think insightfully.
+- If you are not sure about file content or codebase structure pertaining to the user’s request, use your tools to read files and gather the relevant information: do NOT guess or make up an answer.
+
+
+---
 
 # Package management
+
 - All packages are installed via `uv`, not `pip` or anything else.
 - In most cases you don't need to install any package, it's already taken care of
 - You need to use the `uv` command to run things, for instance:
@@ -12,13 +21,17 @@ alwaysApply: true
   - Run a script: `uv run python -m ....`
 - If you _do_ need to install a new package, use: `uv add <package_name>`, never use `pip ..` and never use `uv run pip ...`
 
+
 # Tests
+
 - ALWAYS Add unit tests when writing a new feature (or tweaking existing behavior)
 - The tests are under the `tests` directory
 - When writing tests always write them in `pytest` style, never `unittest` style
 - Always run all unit-tests at once (with `uv run pytest`) instead of individual ones. This helps you identify breaking changes early
 
+
 # Manual Checking
+
 - If you want to check the output of your changes, simply run the tests and compare:
   - `tests/full_test_workspace`
   - `full_test_workspace (Reflect format)`
@@ -27,6 +40,8 @@ alwaysApply: true
   1. In a unit test
   2. In a MD file under `tests/full_test_workspace` (for instance, like [2025-02-15.md](mdc:tests/full_test_workspace (Reflect format)/journals/2025-02-15.md))
 
+
 # Project
+
 - This is a LogSeq to Reflect converter (LogSeq and Reflect are both note-taking apps)
 - It converts LogSeq files into a format that's easy to import in Reflect
