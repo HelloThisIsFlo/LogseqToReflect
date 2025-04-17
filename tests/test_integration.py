@@ -317,3 +317,49 @@ def test_full_workspace_conversion(monkeypatch):
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
         raise e
+
+
+def test_arrows_processor_integration(tmp_path):
+    from src.processors.arrows_processor import ArrowsProcessor
+    from src.processors.pipeline import ProcessorPipeline
+    from src.processors.task_cleaner import TaskCleaner
+    from src.processors.link_processor import LinkProcessor
+    from src.processors.properties_processor import PropertiesProcessor
+    from src.processors.ordered_list_processor import OrderedListProcessor
+    from src.processors.empty_content_cleaner import EmptyContentCleaner
+    from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
+    from src.processors.wikilink import WikiLinkProcessor
+
+    # Simulate a pipeline similar to the main one
+    pipeline = ProcessorPipeline(
+        [
+            LinkProcessor(),
+            PropertiesProcessor(),
+            OrderedListProcessor(),
+            TaskCleaner(),
+            EmptyContentCleaner(),
+            IndentedBulletPointsProcessor(),
+            WikiLinkProcessor(),
+            ArrowsProcessor(),
+        ]
+    )
+    content = """
+# Test Arrows Integration
+
+- This is a right arrow ->
+- This is another =>
+- This is a left arrow <-
+- This is another <=
+"""
+    new_content, changed = pipeline.process(content)
+    assert changed is True
+    assert "->" not in new_content
+    assert "=>" not in new_content
+    assert "<-" not in new_content
+    assert "<=" not in new_content
+    assert new_content.count("→") == 2
+    assert new_content.count("←") == 2
+    assert "right arrow →" in new_content
+    assert "another →" in new_content
+    assert "left arrow ←" in new_content
+    assert "another ←" in new_content

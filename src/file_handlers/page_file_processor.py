@@ -12,6 +12,7 @@ from ..processors import (
     WikiLinkProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
+from ..processors.arrows_processor import ArrowsProcessor
 from typing import Optional
 
 
@@ -43,6 +44,7 @@ class PageFileProcessor(FileProcessor):
                     if categories_config
                     else WikiLinkProcessor()
                 ),
+                ArrowsProcessor(),
             ]
         )
         super().__init__(processors, dry_run)

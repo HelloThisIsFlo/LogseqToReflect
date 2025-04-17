@@ -14,6 +14,7 @@ from ..processors import (
     DateHeaderProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
+from ..processors.arrows_processor import ArrowsProcessor
 from typing import Optional
 
 
@@ -40,6 +41,7 @@ class JournalFileProcessor(FileProcessor):
                 EmptyContentCleaner(),
                 IndentedBulletPointsProcessor(),
                 WikiLinkProcessor(),
+                ArrowsProcessor(),
             ]
         )
         super().__init__(processors, dry_run)

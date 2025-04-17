@@ -16,6 +16,7 @@ from src.processors.wikilink import WikiLinkProcessor
 import tempfile
 from src.file_handlers.directory_walker import DirectoryWalker
 from src.processors.ordered_list_processor import OrderedListProcessor
+from src.processors.arrows_processor import ArrowsProcessor
 
 
 class TestDateHeaderProcessor:
@@ -753,3 +754,48 @@ class TestPropertiesProcessor:
                 assert lines[idx + 1] == ""
                 assert lines[idx + 2] != ""
                 break
+
+
+class TestArrowsProcessor:
+    """Tests for the ArrowsProcessor class."""
+
+    def test_replace_arrows(self):
+        processor = ArrowsProcessor()
+        content = "This is an arrow -> and another => in the text."
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "->" not in new_content
+        assert "=>" not in new_content
+        assert new_content.count("→") == 2
+        assert new_content == "This is an arrow → and another → in the text."
+
+    def test_no_arrows(self):
+        processor = ArrowsProcessor()
+        content = "No arrows here."
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert new_content == content
+
+    def test_multiple_arrows(self):
+        processor = ArrowsProcessor()
+        content = "a -> b => c -> d => e"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "a → b → c → d → e"
+
+    def test_replace_left_arrows(self):
+        processor = ArrowsProcessor()
+        content = "<- left arrow and <= less or equal"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "<-" not in new_content
+        assert "<=" not in new_content
+        assert new_content.count("←") == 2
+        assert new_content == "← left arrow and ← less or equal"
+
+    def test_mixed_arrows(self):
+        processor = ArrowsProcessor()
+        content = "<- a -> b <= c => d"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "← a → b ← c → d"
