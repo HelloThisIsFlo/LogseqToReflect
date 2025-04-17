@@ -661,6 +661,32 @@ class TestBlockReferencesReplacer:
             "abcdabcd-abcd-abcd-abcd-abcdabcdabcd" not in replacer.block_map
         )  # from nested journals
 
+    def test_embed_heading_block_as_bold(self, tmpdir):
+        pages_dir = tmpdir.mkdir("pages")
+        # Block is a heading
+        page1_content = """# Page 1\n## Business Hour Support\n  id:: 6717bc1c-cb7e-449f-8cc7-87261c54ebbd\n"""
+        page1_path = pages_dir.join("page1.md")
+        page1_path.write(page1_content)
+
+        # Reference it both ways
+        page2_content = (
+            "# Page 2\n"
+            "- Regular reference: ((6717bc1c-cb7e-449f-8cc7-87261c54ebbd))\n"
+            "- Embedded reference: {{embed ((6717bc1c-cb7e-449f-8cc7-87261c54ebbd))}}\n"
+        )
+        page2_path = pages_dir.join("page2.md")
+        page2_path.write(page2_content)
+
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+        result, changed = replacer.process(page2_content)
+        assert changed is True
+        # Both references should be replaced with bolded heading, no #
+        assert "**Business Hour Support**" in result
+        assert "##" not in result
+        assert "((6717bc1c-cb7e-449f-8cc7-87261c54ebbd))" not in result
+        assert "{{embed" not in result
+
 
 class TestOrderedListProcessor:
     """Tests for the OrderedListProcessor class"""

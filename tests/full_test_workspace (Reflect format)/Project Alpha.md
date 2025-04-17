@@ -22,4 +22,4 @@
 
 ## Related Projects
 - Parent project: [[Digital Transformation]]
-- See also: ((9c67d4f-831e-6052-d281-ff8aba0a1098))
+- See also: _[ ] Implement authentication system ([[Project Alpha]])_

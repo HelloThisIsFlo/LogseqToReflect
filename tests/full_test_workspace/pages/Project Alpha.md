@@ -24,6 +24,7 @@ collapsed:: true
   id:: 8b56c3e-639d-5942-c170-ee7f9e9e0987
 - DONE Create project documentation
 - DOING Implement authentication system
+  id:: 9c67d4f-831e-6052-d281-ff8aba0a1098
   :LOGBOOK:
   CLOCK: [2025-02-10 Mon 09:00:00]--[2025-02-10 Mon 17:00:00] =>  08:00:00
   :END:

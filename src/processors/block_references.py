@@ -166,6 +166,12 @@ class BlockReferencesReplacer(ContentProcessor):
         if not clean_text and match.group(1):
             clean_text = re.sub(r"^\s*-\s*", "", match.group(1)).strip()
 
+        # If the block is a heading (starts with one or more #), bold it and remove the # symbols
+        if clean_text.startswith("#"):
+            # Remove all leading # and whitespace, then bold
+            heading_text = clean_text.lstrip("# ").strip()
+            clean_text = f"**{heading_text}**"
+
         return clean_text
 
     def _is_valid_block_id(self, block_id: str) -> bool:
