@@ -1,18 +1,17 @@
 # Edge Cases
 
-tags:: project, urgent
-
 ## 1. Macro Blocks
 
 
 ## 2. Inline Properties
 
-- Task with inline properties
-  priority:: high
-  background-color:: yellow
-  id:: 1234-5678
+- ==Task with inline properties==
 
-## 3. Task Hierarchies
+## 3. Background Color
+
+- ==[[Super Important Topic]] that should be highlighted==
+
+## 4. Task Hierarchies
 
 - [ ] Parent task
   - [ ] Subtask in progress
@@ -20,30 +19,30 @@ tags:: project, urgent
   - [ ] Waiting on input
   - [x] ~~Cancelled task~~
 
-## 4. List Types and Indentation
+## 5. List Types and Indentation
 
 - Bullet list item
   1. Ordered subitem one
   1. Ordered subitem two
   - Back to bullet
 
-## 5. Links
+## 6. Links
 
 - Markdown link: [Reflect](https://reflect.app)
 - LogSeq link: [[Nonexistent Page]]
 - Link with special chars: [[Complex Page (v2)]]
 
-## 6. Attachments/Media
+## 7. Attachments/Media
 
 - Embedding image: ![[Assets Diagram.png]]
 - PDF attachment: [Quarterly Report.pdf](assets/Q1_Report.pdf)
 
-## 7. Empty Content After Cleanup
+## 8. Empty Content After Cleanup
 
 - property:: value
 - unused:: remove_me
 
-## 8. Special Formatting
+## 9. Special Formatting
 
 Inline math: $E = mc^2$
 
@@ -54,9 +53,9 @@ def sample():
     return "Hello, 😊"
 ```
 
-## 9. Query Blocks
+## 10. Query Blocks
 
 
-## 10. Naming and Special Characters
+## 11. Naming and Special Characters
 
 - [[Page-with-hyphens and Underscores]]

@@ -683,3 +683,73 @@ class TestOrderedListProcessor:
         new_content, changed = processor.process(content)
         assert changed is False
         assert new_content == content
+
+
+class TestPropertiesProcessor:
+    """Tests for the PropertiesProcessor class, including background-color highlighting and property removal."""
+
+    def test_remove_filters_lines(self):
+        processor = PropertiesProcessor()
+        content = 'Text before\nfilters:: {"hello": true}\nText after'
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "filters::" not in new_content
+        assert "Text before\nText after" == new_content
+
+    def test_highlight_bullet_with_background_color(self):
+        processor = PropertiesProcessor()
+        content = (
+            "- [[Super Important Topic]] that should be highlighted\n"
+            "  background-color:: yellow\n"
+            "- Another point\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "==[[Super Important Topic]] that should be highlighted==" in new_content
+        assert "background-color:: yellow" not in new_content
+        assert "- Another point" in new_content
+
+    def test_highlight_bullet_with_different_background_color(self):
+        processor = PropertiesProcessor()
+        content = (
+            "- [[Another Highlighted Point]]\n"
+            "  background-color:: blue\n"
+            "- Not highlighted\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "==[[Another Highlighted Point]]==" in new_content
+        assert "background-color:: blue" not in new_content
+        assert "- Not highlighted" in new_content
+
+    def test_extra_properties_are_deleted(self):
+        processor = PropertiesProcessor()
+        content = (
+            "- Task with inline properties\n"
+            "  priority:: high\n"
+            "  background-color:: yellow\n"
+            "  id:: 1234-5678\n"
+            "- Another point\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "priority::" not in new_content
+        assert "id::" not in new_content
+        assert "background-color:: yellow" not in new_content
+        assert "==Task with inline properties==" in new_content
+        assert "- Another point" in new_content
+
+    def test_single_blank_line_after_title(self):
+        processor = PropertiesProcessor()
+        # Simulate a file with a title and extra blank lines
+        content = "# Hello Hi How Are You // Testing\n\n\nThis is a test page with multiple underscores."
+        new_content, changed = processor.process(content)
+        # There should be exactly one blank line between the title and the next line
+        lines = new_content.split("\n")
+        # Find the title line
+        for idx, line in enumerate(lines):
+            if line.startswith("# "):
+                # The next line should be blank, and the one after should not
+                assert lines[idx + 1] == ""
+                assert lines[idx + 2] != ""
+                break

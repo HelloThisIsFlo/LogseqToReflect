@@ -1,9 +1,5 @@
 # Project Alpha
 
-tags:: #project, #active
-type:: project
-status:: active
-
 # Project Alpha
 - Started on [[Feb 1st, 2025]]
 - Lead by [[Jane Smith]]

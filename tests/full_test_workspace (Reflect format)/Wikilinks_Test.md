@@ -1,8 +1,5 @@
 # Wikilinks Test // Wiki Links Test // Wikilinks Test Page
 
-type:: documentation
-category:: testing
-
 # Wikilinks Test File
 
 ## Simple Links

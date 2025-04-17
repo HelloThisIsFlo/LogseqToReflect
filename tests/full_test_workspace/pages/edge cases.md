@@ -17,9 +17,8 @@ tags:: project, urgent
 ## 2. Inline Properties
 
 - Task with inline properties
-  priority:: high
+  some-property:: high
   background-color:: yellow
-  id:: 1234-5678
 
 ## 3. Background Color
 

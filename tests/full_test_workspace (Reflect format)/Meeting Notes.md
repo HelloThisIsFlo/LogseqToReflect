@@ -1,9 +1,5 @@
 # Meeting Notes
 
-type:: notes
-category:: meetings
-created:: [[Feb 15th, 2025]]
-
 # Meeting Notes
 
 ## Team Meeting - February 15, 2025
