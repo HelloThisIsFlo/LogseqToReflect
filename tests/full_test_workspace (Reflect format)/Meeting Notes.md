@@ -26,7 +26,10 @@
   - Evaluated [[Cloud Providers]]
 
 - Decisions:
-  
+  #+BEGIN_NOTE
+  The team decided to proceed with the AWS migration in Q2.
+  This decision was based on cost analysis and scalability requirements.
+  #+END_NOTE
 
 ## Query Test
 

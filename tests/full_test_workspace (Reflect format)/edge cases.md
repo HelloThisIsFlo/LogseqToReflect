@@ -2,6 +2,9 @@
 
 ## 1. Macro Blocks
 
+- > ## ℹ️ This is a note block containing [[Link]] and - [ ] Task
+- > ## ⚠️ This is a warning block with ![[Image.png]] embedded.
+- > ## ‼️ Important information goes here.
 
 ## 2. Inline Properties
 
@@ -55,6 +58,9 @@ def sample():
 
 ## 10. Query Blocks
 
+- #+BEGIN_QUERY
+  {:query [:find ?title :where [?p :block/name ?title]]}
+  #+END_QUERY
 
 ## 11. Naming and Special Characters
 

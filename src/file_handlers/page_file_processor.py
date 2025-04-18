@@ -10,6 +10,7 @@ from ..processors import (
     IndentedBulletPointsProcessor,
     PageTitleProcessor,
     WikiLinkProcessor,
+    AdmonitionProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -37,6 +38,7 @@ class PageFileProcessor(FileProcessor):
         processors.extend(
             [
                 TaskCleaner(),
+                AdmonitionProcessor(),
                 EmptyContentCleaner(),
                 IndentedBulletPointsProcessor(),
                 (

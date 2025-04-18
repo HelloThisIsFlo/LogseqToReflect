@@ -10,3 +10,4 @@ from .page_title import PageTitleProcessor
 from .wikilink import WikiLinkProcessor
 from .properties_processor import PropertiesProcessor
 from .arrows_processor import ArrowsProcessor
+from .admonition_processor import AdmonitionProcessor

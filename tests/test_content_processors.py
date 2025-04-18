@@ -17,6 +17,7 @@ import tempfile
 from src.file_handlers.directory_walker import DirectoryWalker
 from src.processors.ordered_list_processor import OrderedListProcessor
 from src.processors.arrows_processor import ArrowsProcessor
+from src.processors.admonition_processor import AdmonitionProcessor
 
 
 class TestDateHeaderProcessor:
@@ -825,3 +826,101 @@ class TestArrowsProcessor:
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content == "← a → b ← c → d"
+
+
+class TestAdmonitionProcessor:
+    """Tests for the AdmonitionProcessor class"""
+
+    @pytest.mark.parametrize(
+        "typ, emoji, heading, marker",
+        [
+            ("IMPORTANT", "‼️", "##", "IMPORTANT"),
+            ("WARNING", "⚠️", "##", "WARNING"),
+            ("TIP", "💡", "##", "TIP"),
+            ("NOTE", "ℹ️", "##", "NOTE"),
+        ],
+    )
+    def test_top_level_admonition(self, typ, emoji, heading, marker):
+        content = f"""
+#+BEGIN_{marker}
+This is a {typ.lower()} heading
+Extra info line
+#+END_{marker}
+""".strip()
+        processor = AdmonitionProcessor()
+        new_content, changed = processor.process(content)
+        assert changed is True
+        lines = new_content.split("\n")
+        if typ == "WARNING":
+            assert lines[0] == f"> {heading} {emoji} This is a {typ.lower()} heading"
+            assert lines[1] == f"> _Extra info line_"
+        else:
+            assert lines[0] == f"> {heading} {emoji} This is a {typ.lower()} heading"
+            assert lines[1] == f"> _Extra info line_"
+
+    @pytest.mark.parametrize(
+        "typ, emoji, heading, marker",
+        [
+            ("IMPORTANT", "‼️", "##", "IMPORTANT"),
+            ("WARNING", "⚠️", "##", "WARNING"),
+            ("TIP", "💡", "##", "TIP"),
+            ("NOTE", "ℹ️", "##", "NOTE"),
+        ],
+    )
+    def test_indented_admonition(self, typ, emoji, heading, marker):
+        content = f"""
+- #+BEGIN_{marker}
+  {typ.title()} block heading
+  More details
+  #+END_{marker}
+""".strip()
+        processor = AdmonitionProcessor()
+        new_content, changed = processor.process(content)
+        assert changed is True
+        lines = new_content.split("\n")
+        prefix = "- "
+        continuation = prefix.replace("- ", "  ")
+        if typ == "WARNING":
+            assert (
+                lines[0] == f"{prefix}> {heading} {emoji} {typ.title()} block heading"
+            )
+            assert lines[1] == f"{continuation}> _More details_"
+        else:
+            assert (
+                lines[0] == f"{prefix}> {heading} {emoji} {typ.title()} block heading"
+            )
+            assert lines[1] == f"{continuation}> _More details_"
+
+    def test_multiple_admonitions(self):
+        content = """
+#+BEGIN_IMPORTANT
+First
+#+END_IMPORTANT
+#+BEGIN_TIP
+Second
+#+END_TIP
+""".strip()
+        processor = AdmonitionProcessor()
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "> ## ‼️ First" in new_content
+        assert "> ## 💡 Second" in new_content
+
+    def test_admonition_with_no_body(self):
+        content = """
+#+BEGIN_NOTE
+Just a heading
+#+END_NOTE
+""".strip()
+        processor = AdmonitionProcessor()
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content.startswith("> ## ℹ️ Just a heading")
+        assert "_" not in new_content or new_content.endswith("_")
+
+    def test_non_admonition_content_untouched(self):
+        content = "Regular content\n- Not an admonition block"
+        processor = AdmonitionProcessor()
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert new_content == content

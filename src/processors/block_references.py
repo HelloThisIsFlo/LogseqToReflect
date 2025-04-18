@@ -58,9 +58,18 @@ class BlockReferencesCleaner(ContentProcessor):
         # Special case: handle any leftover {{embed ...}} patterns
         new_content = re.sub(BlockReferencePatterns.EMBED_GENERIC, "", new_content)
 
-        # Remove #+BEGIN_... #+END_... blocks
+        # Remove #+BEGIN_SRC...#+END_SRC and #+BEGIN_QUERY...#+END_QUERY blocks only (allow leading whitespace)
         new_content = re.sub(
-            BlockReferencePatterns.BEGIN_END_BLOCK, "", new_content, flags=re.DOTALL
+            r"^\s*#\+BEGIN_SRC.*?^\s*#\+END_SRC",
+            "",
+            new_content,
+            flags=re.DOTALL | re.MULTILINE,
+        )
+        new_content = re.sub(
+            r"^\s*#\+BEGIN_QUERY.*?^\s*#\+END_QUERY",
+            "",
+            new_content,
+            flags=re.DOTALL | re.MULTILINE,
         )
 
         # Remove query blocks - match the entire line containing a query
@@ -244,8 +253,18 @@ class BlockReferencesReplacer(ContentProcessor):
             content = BlockReferencePatterns.get_embed_ref_pattern().sub("", content)
 
         # Clean up common patterns regardless
+        # Only remove #+BEGIN_SRC...#+END_SRC and #+BEGIN_QUERY...#+END_QUERY blocks (allow leading whitespace)
         content = re.sub(
-            BlockReferencePatterns.BEGIN_END_BLOCK, "", content, flags=re.DOTALL
+            r"^\s*#\+BEGIN_SRC.*?^\s*#\+END_SRC",
+            "",
+            content,
+            flags=re.DOTALL | re.MULTILINE,
+        )
+        content = re.sub(
+            r"^\s*#\+BEGIN_QUERY.*?^\s*#\+END_QUERY",
+            "",
+            content,
+            flags=re.DOTALL | re.MULTILINE,
         )
         content = re.sub(
             BlockReferencePatterns.QUERY_BLOCK, "", content, flags=re.MULTILINE

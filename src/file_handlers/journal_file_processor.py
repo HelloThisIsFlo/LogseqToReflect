@@ -12,6 +12,7 @@ from ..processors import (
     IndentedBulletPointsProcessor,
     WikiLinkProcessor,
     DateHeaderProcessor,
+    AdmonitionProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -38,6 +39,7 @@ class JournalFileProcessor(FileProcessor):
         processors.extend(
             [
                 TaskCleaner(),
+                AdmonitionProcessor(),
                 EmptyContentCleaner(),
                 IndentedBulletPointsProcessor(),
                 WikiLinkProcessor(),
