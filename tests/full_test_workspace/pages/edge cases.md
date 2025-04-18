@@ -80,3 +80,9 @@ def sample():
 ## 11. Naming and Special Characters
 
 - [[Page-With-Hyphens_and_Underscores]]
+
+## 12. Tasks in headings
+
+- ## TODO Some task
+	- # DONE Another task
+		- ### WAITING One more task

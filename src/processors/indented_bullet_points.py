@@ -1,4 +1,5 @@
 from .base import ContentProcessor
+import re
 
 
 class IndentedBulletPointsProcessor(ContentProcessor):
@@ -8,6 +9,7 @@ class IndentedBulletPointsProcessor(ContentProcessor):
     1. Removes one level of tab indentation from bullet points directly under headings
     2. Preserves the hierarchical structure of nested bullet points
     3. Ensures proper indentation levels are maintained throughout bullet hierarchies
+    4. Preserves indentation for list items that contain headings with tasks
     """
 
     def process(self, content):
@@ -34,9 +36,19 @@ class IndentedBulletPointsProcessor(ContentProcessor):
             trimmed_line = line.lstrip("\t")
             is_bullet = trimmed_line.startswith("- ")
 
+            # Check if this is a bullet with a heading that might include a task
+            # Match any heading level (1-6 #) followed by a task marker
+            contains_heading_with_task = (
+                is_bullet
+                and re.search(r"#{1,6}\s+\[([ x])\]", trimmed_line) is not None
+            )
+
             if is_bullet:
+                # Special case for bullets containing heading tasks - preserve original indentation
+                if contains_heading_with_task:
+                    new_lines.append(line)
                 # Handle indentation levels based on bullet hierarchy
-                if current_section is not None and leading_tabs == 1:
+                elif current_section is not None and leading_tabs == 1:
                     # Top level bullet under a section heading - remove the leading tab
                     new_lines.append(trimmed_line)
                 elif leading_tabs > 0:

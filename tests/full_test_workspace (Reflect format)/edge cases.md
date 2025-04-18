@@ -65,3 +65,9 @@ def sample():
 ## 11. Naming and Special Characters
 
 - [[Page-with-hyphens and Underscores]]
+
+## 12. Tasks in headings
+
+- ## [ ] Some task
+	- # [x] Another task
+		- ### [ ] One more task
