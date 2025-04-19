@@ -1,6 +1,8 @@
 from .base import ContentProcessor
 import os
 import re
+import urllib.parse
+import string
 
 # Use environment variables for config paths if set, else default
 CATEGORIES_DIR = os.path.join(
@@ -62,34 +64,64 @@ class PageTitleProcessor(ContentProcessor):
         self.lowercase_words = load_lowercase_words(lowercase_path)
 
     def _title_case(self, text):
-        """Apply proper title case to text"""
+        """Apply proper title case to text, capitalizing after punctuation like : or quotes, and if a word starts with a quote."""
         words = text.split()
         if not words:
             return ""
-        # First word always capitalized (or uppercased if in list)
-        result = [
-            self._maybe_uppercase(words[0], is_first=True, is_last=(len(words) == 1))
-        ]
-        for i, word in enumerate(words[1:-1] if len(words) > 1 else []):
-            result.append(self._maybe_uppercase(word, is_first=False, is_last=False))
-        if len(words) > 1:
-            result.append(
-                self._maybe_uppercase(words[-1], is_first=False, is_last=True)
+        result = []
+        capitalize_next = True  # Always capitalize the first word
+        for i, word in enumerate(words):
+            is_first = i == 0
+            is_last = i == len(words) - 1
+            # Capitalize if first, last, after punctuation, or if word starts with a quote/punctuation
+            force_cap = capitalize_next or (
+                word and word[0] in {":", '"', "'", "“", "”", "‘", "’", "—", "-"}
             )
+            result.append(
+                self._maybe_uppercase(
+                    word, is_first=is_first, is_last=is_last, force_capitalize=force_cap
+                )
+            )
+            # If this word ends with punctuation, capitalize the next word
+            if word and word[-1] in {":", '"', "'", "“", "”", "‘", "’", "—", "-"}:
+                capitalize_next = True
+            else:
+                capitalize_next = False
         return " ".join(result)
 
-    def _maybe_uppercase(self, word, is_first=False, is_last=False):
-        # Always uppercase if in the list, else title/lowercase as before
-        if word.upper() in self.uppercase_terms:
-            return word.upper()
-        if not is_first and word.lower() in self.lowercase_words and not is_last:
-            return word.lower()
-        return word.capitalize()
+    def _maybe_uppercase(
+        self, word, is_first=False, is_last=False, force_capitalize=False
+    ):
+        # Strip leading/trailing punctuation for logic, but preserve for output
+        leading = ""
+        trailing = ""
+        core = word
+        while core and core[0] in string.punctuation:
+            leading += core[0]
+            core = core[1:]
+        while core and core[-1] in string.punctuation:
+            trailing = core[-1] + trailing
+            core = core[:-1]
+        if core.upper() in self.uppercase_terms:
+            return leading + core.upper() + trailing
+        if (
+            not is_first
+            and core.lower() in self.lowercase_words
+            and not is_last
+            and not force_capitalize
+        ):
+            return leading + core.lower() + trailing
+        # Capitalize only the core
+        if core:
+            core = core[0].upper() + core[1:]
+        return leading + core + trailing
 
     def _format_title_from_filename(self):
         """Format the title based on the filename without the extension, flattening any hierarchy"""
         base_name = os.path.splitext(self.filename)[0]
-        parts = re.split(r"___|/|_", base_name)
+        # Decode URL-encoded characters for the title only
+        base_name_decoded = urllib.parse.unquote(base_name)
+        parts = re.split(r"___|/|_", base_name_decoded)
         parts = [p.strip() for p in parts if p.strip()]
         type_found, parts = self._extract_type(parts)
         flat_name = " ".join(parts)

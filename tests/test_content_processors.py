@@ -337,6 +337,18 @@ class TestPageTitleProcessor:
         assert changed is True
         assert new_content == "# My World\n\n- hello"
 
+    def test_url_encoded_filename_decodes_title(self):
+        processor = self.processor(
+            "This is a test%3A With some %22quoted text%22 it should be converted.md"
+        )
+        content = "Some content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        # The title should be decoded and title-cased
+        assert new_content.startswith(
+            '# This is a Test: With Some "Quoted Text" It Should Be Converted\n\n'
+        )
+
 
 class TestIndentedBulletPointsProcessor:
     """Tests for the IndentedBulletPointsProcessor class"""
