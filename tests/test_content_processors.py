@@ -383,6 +383,82 @@ class TestIndentedBulletPointsProcessor:
         )  # Should not change the indentation of headings with tasks
         assert content == new_content
 
+    def test_complex_hierarchy_indentation(self):
+        processor = IndentedBulletPointsProcessor()
+        content = (
+            "## [[What I've done today]]\n"
+            "\t- [[jira/Implement Tracing Support in Core Platform]]\n"
+            "\t\t- Started mapping out the different request flow\n"
+            "\t\t\t- Had some very nice **breakthroughs**! 😃\n"
+            "\t\t\t\t- #### What works:\n"
+            "\t\t\t\t  background-color:: green\n"
+            "\t\t\t\t\t- Service A\n"
+            "\t\t\t\t\t\t- Everything works ✅\n"
+            "\t\t\t\t\t- Service B\n"
+            "\t\t\t\t\t\t- **Caveat:** Client actually does 2 calls\n"
+            "\t\t\t\t\t\t\t- The calls\n"
+            "\t\t\t\t\t\t\t\t- `fetchMetadata`\n"
+            "\t\t\t\t\t\t\t\t- `getResponse`\n"
+            "\t\t\t\t\t\t- That's why we get 2 [[dt/trace id]]s ...\n"
+            "\t\t\t\t\t\t\t- ... but the second [[dt/trace id]] has **all the info we need** 🎉\n"
+            "\t\t\t\t\t- `resolveData`\n"
+            "\t\t\t\t\t\t- This is what's actually called by the internal `fetch_dataset` method\n"
+            "\t\t\t\t- #### What doesn't work:\n"
+            "\t\t\t\t  background-color:: red\n"
+            "\t\t\t\t\t- The fallback path via `get_fallback_stream?`\n"
+        )
+        expected = (
+            "## [[What I've done today]]\n"
+            "- [[jira/Implement Tracing Support in Core Platform]]\n"
+            "\t- Started mapping out the different request flow\n"
+            "\t\t- Had some very nice **breakthroughs**! 😃\n"
+            "\t\t\t- #### What works:\n"
+            "\t\t\t  background-color:: green\n"
+            "\t\t\t\t- Service A\n"
+            "\t\t\t\t\t- Everything works ✅\n"
+            "\t\t\t\t- Service B\n"
+            "\t\t\t\t\t- **Caveat:** Client actually does 2 calls\n"
+            "\t\t\t\t\t\t- The calls\n"
+            "\t\t\t\t\t\t\t- `fetchMetadata`\n"
+            "\t\t\t\t\t\t\t- `getResponse`\n"
+            "\t\t\t\t\t- That's why we get 2 [[dt/trace id]]s ...\n"
+            "\t\t\t\t\t\t- ... but the second [[dt/trace id]] has **all the info we need** 🎉\n"
+            "\t\t\t\t- `resolveData`\n"
+            "\t\t\t\t\t- This is what's actually called by the internal `fetch_dataset` method\n"
+            "\t\t\t- #### What doesn't work:\n"
+            "\t\t\t  background-color:: red\n"
+            "\t\t\t\t- The fallback path via `get_fallback_stream?`\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == expected
+
+    def test_bullet_with_heading_and_children(self):
+        processor = IndentedBulletPointsProcessor()
+        content = (
+            "- ### [[Flexible Work Policy]]\n"
+            "\t- There's an internal policy that allows short-term remote work\n"
+            "\t- Typical allowance:\n"
+            "\t\t- 1 week flexible\n"
+            "\t\t- 2 weeks during designated periods\n"
+            "\t- #### Process\n"
+            "\t\t- Request must be submitted 30 days ahead\n"
+            "\t\t- Requires approval and standard HR documentation\n"
+        )
+        expected = (
+            "- ### [[Flexible Work Policy]]\n"
+            "\t- There's an internal policy that allows short-term remote work\n"
+            "\t- Typical allowance:\n"
+            "\t\t- 1 week flexible\n"
+            "\t\t- 2 weeks during designated periods\n"
+            "\t- #### Process\n"
+            "\t\t- Request must be submitted 30 days ahead\n"
+            "\t\t- Requires approval and standard HR documentation\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is False  # No change should be made
+        assert new_content == expected
+
 
 class TestWikiLinkProcessor:
     """Tests for the WikiLinkProcessor class"""

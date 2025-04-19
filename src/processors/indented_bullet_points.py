@@ -12,61 +12,105 @@ class IndentedBulletPointsProcessor(ContentProcessor):
     4. Preserves indentation for list items that contain headings with tasks
     """
 
-    def process(self, content):
-        lines = content.split("\n")
-        new_lines = []
-        current_section = None
+    def process(
+        self,
+        content,
+        parent_is_heading=False,
+        heading_child_level=None,
+        heading_root=False,
+        heading_root_level=0,
+    ):
+        # --- Tree Node definition ---
+        class Node:
+            def __init__(self, line, indent):
+                self.line = line
+                self.indent = indent
+                self.children = []
 
-        for i, line in enumerate(lines):
-            # Check if line is a heading (starts with #)
-            if line.strip().startswith("#"):
-                current_section = line
-                new_lines.append(line)
-                continue
+        # --- Parse lines into a tree ---
+        def parse_tree(lines):
+            root = Node(None, -1)
+            stack = [root]
+            for line in lines:
+                indent = 0
+                for char in line:
+                    if char == "\t":
+                        indent += 1
+                    else:
+                        break
+                node = Node(line.lstrip("\t"), indent)
+                # Find parent
+                while stack and stack[-1].indent >= indent:
+                    stack.pop()
+                stack[-1].children.append(node)
+                stack.append(node)
+            return root
 
-            # Count leading tabs to determine indentation level
-            leading_tabs = 0
-            for char in line:
-                if char == "\t":
-                    leading_tabs += 1
+        # --- Process the tree recursively ---
+        def process_node(
+            node, parent_is_heading=False, heading_root=False, heading_root_level=0
+        ):
+            output = []
+            for child in node.children:
+                trimmed = child.line.lstrip()
+                is_section_heading = child.line.strip().startswith("#")
+                is_bullet = trimmed.startswith("- ")
+                # No more bullet promotion logic
+                if is_section_heading:
+                    output.append(child.line)
+                    # For children, set heading_root=True and heading_root_level=1
+                    output.extend(
+                        process_node(
+                            child,
+                            parent_is_heading=False,
+                            heading_root=True,
+                            heading_root_level=1,
+                        )
+                    )
+                elif heading_root and is_bullet:
+                    # Bullet child of a section, output with (indent - heading_root_level) tabs
+                    bullet_indent = max(child.indent - heading_root_level, 0)
+                    output.append(("\t" * bullet_indent) + trimmed)
+                    output.extend(
+                        process_node(
+                            child,
+                            parent_is_heading=False,
+                            heading_root=True,
+                            heading_root_level=heading_root_level,
+                        )
+                    )
+                elif heading_root and not is_bullet:
+                    # Non-bullet child of a section, output with (indent - heading_root_level) tabs
+                    prop_indent = max(child.indent - heading_root_level, 0)
+                    output.append(("\t" * prop_indent) + child.line)
+                    output.extend(
+                        process_node(
+                            child,
+                            parent_is_heading=False,
+                            heading_root=True,
+                            heading_root_level=heading_root_level,
+                        )
+                    )
                 else:
-                    break
+                    # For all other lines, preserve original indentation
+                    output.append(("\t" * child.indent) + child.line)
+                    output.extend(
+                        process_node(
+                            child,
+                            parent_is_heading=False,
+                            heading_root=False,
+                            heading_root_level=0,
+                        )
+                    )
+            return output
 
-            # Check if this is a bullet point (after tabs there's "- ")
-            trimmed_line = line.lstrip("\t")
-            is_bullet = trimmed_line.startswith("- ")
-
-            # Check if this is a bullet with a heading that might include a task
-            # Match any heading level (1-6 #) followed by a task marker
-            contains_heading_with_task = (
-                is_bullet
-                and re.search(r"#{1,6}\s+\[([ x])\]", trimmed_line) is not None
-            )
-
-            if is_bullet:
-                # Special case for bullets containing heading tasks - preserve original indentation
-                if contains_heading_with_task:
-                    new_lines.append(line)
-                # Handle indentation levels based on bullet hierarchy
-                elif current_section is not None and leading_tabs == 1:
-                    # Top level bullet under a section heading - remove the leading tab
-                    new_lines.append(trimmed_line)
-                elif leading_tabs > 0:
-                    # Keep proper indentation for nested bullets, preserving hierarchy
-                    # but reduce level by 1 for top-level bullets
-                    indentation = "\t" * (leading_tabs - 1)
-                    new_lines.append(f"{indentation}{trimmed_line}")
-                else:
-                    # Already a top-level bullet without indentation
-                    new_lines.append(line)
-            else:
-                # Not a bullet point, keep as is
-                new_lines.append(line)
-
-                # If we have a non-empty, non-heading, non-bullet line,
-                # reset the current section (we're no longer directly under a heading)
-                if line.strip() and not line.strip().startswith("#"):
-                    current_section = None
-
-        new_content = "\n".join(new_lines)
+        lines = content.split("\n") if content else []
+        tree = parse_tree(lines)
+        processed_lines = process_node(
+            tree,
+            parent_is_heading=parent_is_heading,
+            heading_root=heading_root,
+            heading_root_level=heading_root_level,
+        )
+        new_content = "\n".join(processed_lines)
         return new_content, new_content != content

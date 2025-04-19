@@ -15,8 +15,8 @@
 ## Special Cases
 - Link inside a task: TODO Check the [[Database Table Schema]] ← Should title case
 - Link in an indented bullet:
-- This has a [[Nested Link in Text]]
-- Another with [[Complex Name with Underscores]] ← Should keep as is
+	- This has a [[Nested Link in Text]]
+	- Another with [[Complex Name with Underscores]] ← Should keep as is
 
 ## Reference Examples
 - See also [[Database Backups Daily Schedule]] for more information
