@@ -89,6 +89,22 @@ class BlockReferencesReplacer(ContentProcessor):
         # Dictionary to store block IDs and their associated text and page names
         # Format: {block_id: (text, page_name)}
         self.block_map: Dict[str, Tuple[str, str]] = {}
+        # Load type definitions if available
+        self.types = self._load_types()
+
+    def _load_types(self) -> set:
+        """Load type definitions from the types.txt file if it exists"""
+        try:
+            categories_dir = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "..", "categories_config"
+            )
+            types_path = os.environ.get(
+                "LOGSEQ2REFLECT_TYPES_PATH", os.path.join(categories_dir, "types.txt")
+            )
+            with open(types_path, "r", encoding="utf-8") as f:
+                return set(line.strip().lower() for line in f if line.strip())
+        except Exception:
+            return set()
 
     def _is_direct_child(self, parent: str, child: str) -> bool:
         """Return True if 'child' is an immediate subdirectory of 'parent'"""
@@ -123,6 +139,30 @@ class BlockReferencesReplacer(ContentProcessor):
         base_name = os.path.basename(file_path)
         base_name = os.path.splitext(base_name)[0]
         return base_name.replace("_", " ")
+
+    def _format_page_name_for_link(self, page_name: str) -> str:
+        """Format the page name for use in a link, removing type prefixes if present"""
+        if not self.types:
+            return page_name
+
+        # Replace backlinks with their content - e.g., [[some text]] becomes "some text"
+        # This matches how page titles are formatted when backlinks are in the filename
+        page_name = re.sub(r"\[\[(.*?)\]\]", r"\1", page_name)
+
+        # Case 1: Check if the page_name has a slash format (type/Title)
+        if "/" in page_name:
+            parts = page_name.split("/", 1)
+            if len(parts) == 2 and parts[0].lower() in self.types:
+                # Return just the title part without the type prefix
+                return parts[1].strip()
+
+        # Case 2: Check if the page name starts with a type word followed by space
+        # This handles cases like "Jira Title" -> "Title"
+        words = page_name.split(None, 1)  # Split by whitespace, max 1 split
+        if len(words) >= 2 and words[0].lower() in self.types:
+            return words[1].strip()
+
+        return page_name
 
     def _extract_block_ids(self, content: str, page_name: str) -> None:
         """Extract all block IDs and their associated text from the content"""
@@ -207,6 +247,8 @@ class BlockReferencesReplacer(ContentProcessor):
                 block_id = match.group(1)
                 if block_id in self.block_map:
                     text, page_name = self.block_map[block_id]
+                    # Format page name for the link
+                    formatted_page_name = self._format_page_name_for_link(page_name)
                     modified = True
                     # Extract indentation and context
                     indentation = len(line) - len(line.lstrip())
@@ -220,19 +262,19 @@ class BlockReferencesReplacer(ContentProcessor):
                     if before_embed.strip():
                         # Preserve existing line content
                         lines[i] = (
-                            f"{before_embed}_{text} ([[{page_name}]])_{after_embed}"
+                            f"{before_embed}_{text} ([[{formatted_page_name}]])_{after_embed}"
                         )
                     else:
                         # No text before the embed, just indentation
                         if is_bullet:
                             # Preserve the bullet point
                             lines[i] = (
-                                f"{indent_spaces}- _{text} ([[{page_name}]])_{after_embed}"
+                                f"{indent_spaces}- _{text} ([[{formatted_page_name}]])_{after_embed}"
                             )
                         else:
                             # Just add the content
                             lines[i] = (
-                                f"{indent_spaces}_{text} ([[{page_name}]])_{after_embed}"
+                                f"{indent_spaces}_{text} ([[{formatted_page_name}]])_{after_embed}"
                             )
         return "\n".join(lines) if modified else content
 
@@ -240,7 +282,8 @@ class BlockReferencesReplacer(ContentProcessor):
         """Replace regular ((block-id)) references"""
         for block_id, (text, page_name) in self.block_map.items():
             pattern = r"\(\(" + re.escape(block_id) + r"\)\)"
-            content = re.sub(pattern, f"_{text} ([[{page_name}]])_", content)
+            formatted_page_name = self._format_page_name_for_link(page_name)
+            content = re.sub(pattern, f"_{text} ([[{formatted_page_name}]])_", content)
         return content
 
     def _clean_orphaned_references(self, content: str) -> str:

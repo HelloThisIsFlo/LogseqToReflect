@@ -834,6 +834,77 @@ class TestBlockReferencesReplacer:
         assert "((6717bc1c-cb7e-449f-8cc7-87261c54ebbd))" not in result
         assert "{{embed" not in result
 
+    def test_handle_type_prefixed_page_names(self, tmpdir):
+        # Create a temporary types.txt file
+        config_dir = tmpdir.mkdir("config")
+        types_file = config_dir.join("types.txt")
+        types_file.write("project\nmeeting\ntype\ntopic\n")
+
+        # Set environment variable to point to our test types file
+        import os
+
+        os.environ["LOGSEQ2REFLECT_TYPES_PATH"] = str(types_file)
+
+        # Create sample files with block IDs and references in 'pages'
+        pages_dir = tmpdir.mkdir("pages")
+
+        # Create a page with a type/ prefix pattern
+        page1_content = """# type/Test Page
+- This is a test block in a type-prefixed page
+  id:: abcd1234-5678-90ab-cdef-1234567890ab
+- Another block
+"""
+        page1_path = pages_dir.join("type___test_page.md")
+        page1_path.write(page1_content)
+
+        # Create another page with a different type/ prefix
+        page2_content = """# project/Another Page
+- This is a test block in a project-prefixed page
+  id:: bbbb1111-2222-3333-4444-555566667777
+"""
+        page2_path = pages_dir.join("project___another_page.md")
+        page2_path.write(page2_content)
+
+        # Create a page that references both blocks
+        page3_content = """# References Page
+- Regular reference to type page: ((abcd1234-5678-90ab-cdef-1234567890ab))
+- Embedded reference to type page: {{embed ((abcd1234-5678-90ab-cdef-1234567890ab))}}
+- Regular reference to project page: ((bbbb1111-2222-3333-4444-555566667777))
+- Embedded reference to project page: {{embed ((bbbb1111-2222-3333-4444-555566667777))}}
+"""
+        page3_path = pages_dir.join("references_page.md")
+        page3_path.write(page3_content)
+
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+
+        # Verify the blocks were collected correctly
+        assert "abcd1234-5678-90ab-cdef-1234567890ab" in replacer.block_map
+        text1, page_name1 = replacer.block_map["abcd1234-5678-90ab-cdef-1234567890ab"]
+        assert text1 == "This is a test block in a type-prefixed page"
+        assert page_name1 == "type/Test Page"
+
+        assert "bbbb1111-2222-3333-4444-555566667777" in replacer.block_map
+        text2, page_name2 = replacer.block_map["bbbb1111-2222-3333-4444-555566667777"]
+        assert text2 == "This is a test block in a project-prefixed page"
+        assert page_name2 == "project/Another Page"
+
+        # Test processing the references
+        result, changed = replacer.process(page3_content)
+        assert changed is True
+
+        # For type/Test Page, the type should be removed in the links
+        assert "[[Test Page]]" in result
+        assert "[[type/Test Page]]" not in result
+
+        # For project/Another Page, the project should be removed in the links
+        assert "[[Another Page]]" in result
+        assert "[[project/Another Page]]" not in result
+
+        # Clean up environment variable
+        del os.environ["LOGSEQ2REFLECT_TYPES_PATH"]
+
 
 class TestOrderedListProcessor:
     """Tests for the OrderedListProcessor class"""

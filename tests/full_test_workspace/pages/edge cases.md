@@ -89,3 +89,7 @@ def sample():
 - ## TODO Some task
 	- # DONE Another task
 		- ### WAITING One more task
+
+## 13. Embedding a block in a page with type
+
+- This is a test ((f27e1182-ff87-471a-b4ce-1890ddc11677)) bla bla
