@@ -219,17 +219,44 @@ class TestPageTitleProcessor:
 
     @pytest.fixture(autouse=True)
     def setup_test_config(self, tmp_path):
-        # Create test uppercase and types config files
+        # Create test uppercase, types, and lowercase config files
         self.uppercase_path = tmp_path / "uppercase.txt"
         self.types_path = tmp_path / "types.txt"
+        self.lowercase_path = tmp_path / "lowercase.txt"
         self.uppercase_path.write_text("AWS\nIAM\nCLI\n")
         self.types_path.write_text("jira\nrepo\nproject\nmeeting\n")
+        self.lowercase_path.write_text(
+            """a
+an
+the
+and
+but
+or
+for
+nor
+as
+at
+by
+for
+from
+in
+into
+near
+of
+on
+onto
+to
+with
+is
+"""
+        )
 
     def processor(self, filename):
         return PageTitleProcessor(
             filename,
             uppercase_path=str(self.uppercase_path),
             types_path=str(self.types_path),
+            lowercase_path=str(self.lowercase_path),
         )
 
     def test_format_simple_filename(self):
