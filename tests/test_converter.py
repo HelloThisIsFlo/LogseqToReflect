@@ -129,13 +129,25 @@ class TestLogSeqToReflectConverter:
         assert not os.path.exists(os.path.join(output_dir, "journals"))
         assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-        # Check journal files were converted (flat)
-        assert os.path.exists(os.path.join(output_dir, "2023-01-01.md"))
-        assert os.path.exists(os.path.join(output_dir, "2023-01-02.md"))
+        # Check step_1 and step_2 exist
+        step_1_dir = os.path.join(output_dir, "step_1")
+        step_2_dir = os.path.join(output_dir, "step_2")
+        assert os.path.exists(step_1_dir)
+        assert os.path.exists(step_2_dir)
 
-        # Check page files were converted (flat)
-        assert os.path.exists(os.path.join(output_dir, "test_page.md"))
-        assert os.path.exists(os.path.join(output_dir, "another_page.md"))
+        # Check journal files were converted (should be in step_2)
+        assert os.path.exists(os.path.join(step_2_dir, "2023-01-01.md"))
+        assert os.path.exists(os.path.join(step_2_dir, "2023-01-02.md"))
+
+        # Check page files were converted (should be in step_1 or step_2)
+        found_test_page = os.path.exists(
+            os.path.join(step_1_dir, "test_page.md")
+        ) or os.path.exists(os.path.join(step_2_dir, "test_page.md"))
+        found_another_page = os.path.exists(
+            os.path.join(step_1_dir, "another_page.md")
+        ) or os.path.exists(os.path.join(step_2_dir, "another_page.md"))
+        assert found_test_page
+        assert found_another_page
 
         # Check stats
         assert stats.journal_files_processed == 2

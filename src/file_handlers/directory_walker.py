@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 from pathlib import Path
 from typing import List, Tuple, Optional, Iterator
 
@@ -42,6 +43,9 @@ class DirectoryWalker:
         self.page_processor = PageFileProcessor(
             block_references_replacer, dry_run, categories_config=categories_config
         )
+        # Always use step_1 and step_2 subdirectories under the output dir
+        self.step_1_dir = os.path.join(self.output_dir, "step_1")
+        self.step_2_dir = os.path.join(self.output_dir, "step_2")
 
     def find_directories(self, dir_name: str) -> List[str]:
         """
@@ -84,6 +88,46 @@ class DirectoryWalker:
             logger.error(f"Failed to create output directory {output_path}: {e}")
             return False
 
+    def _has_aliases(self, file_path: str) -> bool:
+        """
+        Check if a file has aliases (triple underscores in filename).
+
+        Args:
+            file_path: Path to the file to check
+
+        Returns:
+            True if file has aliases, False otherwise
+        """
+        filename = os.path.basename(file_path)
+        if "___" in filename:
+            return True
+
+        # Also check if file content has an alias property
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if re.search(r"alias::", content):
+                return True
+        except Exception:
+            pass
+
+        return False
+
+    def _get_output_dir_for_file(self, file_path: str) -> str:
+        """
+        Determine the appropriate output directory for a file.
+
+        Args:
+            file_path: Path to the file to check
+
+        Returns:
+            Path to the appropriate output directory (step_1 or step_2)
+        """
+        if self._has_aliases(file_path):
+            return self.step_1_dir
+        else:
+            return self.step_2_dir
+
     def process_journal_directory(self, journal_dir: str) -> Tuple[int, int, int]:
         """
         Process all markdown files in a journal directory and its subdirectories.
@@ -94,21 +138,21 @@ class DirectoryWalker:
         Returns:
             Tuple of (total_files, content_changed, renamed)
         """
-        # All output files go directly to self.output_dir
-        if not self._ensure_output_directory(self.output_dir):
+        # Ensure both output directories exist
+        if not self._ensure_output_directory(
+            self.step_1_dir
+        ) or not self._ensure_output_directory(self.step_2_dir):
             return 0, 0, 0
-
         total_files = 0
         content_changed = 0
         renamed = 0
-
         logger.info(f"Processing journal directory: {journal_dir}")
-        logger.info(f"Output directory: {self.output_dir}")
-
+        logger.info(f"Output step_1 directory: {self.step_1_dir}")
+        logger.info(f"Output step_2 directory: {self.step_2_dir}")
         try:
             for file_path in find_markdown_files(journal_dir):
-                # Output root is always the output_dir (flat)
-                output_root = self.output_dir
+                # Journals always go to step_2
+                output_root = self.step_2_dir
                 try:
                     content_change, file_renamed = self.journal_processor.process_file(
                         file_path, output_root
@@ -122,7 +166,6 @@ class DirectoryWalker:
                     logger.error(f"Error processing journal file {file_path}: {e}")
         except Exception as e:
             logger.error(f"Error walking journal directory {journal_dir}: {e}")
-
         return total_files, content_changed, renamed
 
     def process_pages_directory(self, pages_dir: str) -> Tuple[int, int]:
@@ -135,24 +178,23 @@ class DirectoryWalker:
         Returns:
             Tuple of (total_files, content_changed)
         """
-        # All output files go directly to self.output_dir
-        if not self._ensure_output_directory(self.output_dir):
+        # Ensure both output directories exist
+        if not self._ensure_output_directory(
+            self.step_1_dir
+        ) or not self._ensure_output_directory(self.step_2_dir):
             return 0, 0
-
         total_files = 0
         content_changed = 0
-
         logger.info(f"Processing pages directory: {pages_dir}")
-        logger.info(f"Output directory: {self.output_dir}")
-
+        logger.info(f"Output step_1 directory: {self.step_1_dir}")
+        logger.info(f"Output step_2 directory: {self.step_2_dir}")
         try:
             for file_path in find_markdown_files(pages_dir):
-                # Output path is always in the output_dir (flat)
-                output_path = os.path.join(self.output_dir, os.path.basename(file_path))
+                output_dir = self._get_output_dir_for_file(file_path)
+                output_path = os.path.join(output_dir, os.path.basename(file_path))
                 try:
                     if not self.dry_run:
                         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
                     content_change, _ = self.page_processor.process_file(
                         file_path, output_path
                     )
@@ -163,5 +205,4 @@ class DirectoryWalker:
                     logger.error(f"Error processing page file {file_path}: {e}")
         except Exception as e:
             logger.error(f"Error walking pages directory {pages_dir}: {e}")
-
         return total_files, content_changed

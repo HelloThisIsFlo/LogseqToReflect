@@ -112,46 +112,58 @@ def test_end_to_end_conversion(test_logseq_workspace, monkeypatch, tmp_path):
     assert not os.path.exists(os.path.join(output_dir, "journals"))
     assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-    # Check journal files (flat)
-    journal_files = os.listdir(output_dir)
+    # Check step_1 and step_2 exist
+    step_1_dir = os.path.join(output_dir, "step_1")
+    step_2_dir = os.path.join(output_dir, "step_2")
+    assert os.path.exists(step_1_dir)
+    assert os.path.exists(step_2_dir)
+
+    # Check journal files (should be in step_2)
+    journal_files = os.listdir(step_2_dir)
     assert "2023-01-01.md" in journal_files
     assert "2023-02-14.md" in journal_files
 
-    # Check page files (flat)
-    assert "project___Build agents.md" in journal_files
-    assert "meeting___notes.md" in journal_files
+    # Check page files (should be in step_1 or step_2)
+    all_page_files = os.listdir(step_1_dir) + os.listdir(step_2_dir)
+    assert "project___Build agents.md" in all_page_files
+    assert "meeting___notes.md" in all_page_files
 
     # Verify journal content transformations
-    with open(os.path.join(output_dir, "2023-01-01.md"), "r") as f:
+    with open(os.path.join(step_2_dir, "2023-01-01.md"), "r") as f:
         content = f.read()
         assert "# Sun, January 1st, 2023" in content
         assert "- [ ] Task 1" in content
         assert "- [x] Task 2" in content
 
-    with open(os.path.join(output_dir, "2023-02-14.md"), "r") as f:
+    with open(os.path.join(step_2_dir, "2023-02-14.md"), "r") as f:
         content = f.read()
         assert "# Tue, February 14th, 2023" in content
         assert ":LOGBOOK:" not in content
         assert "- [ ] Working on project" in content
 
     # Verify page content transformations
-    with open(os.path.join(output_dir, "project___Build agents.md"), "r") as f:
-        content = f.read()
-        assert "Agents Doc" in content
-        assert "#project" in content
-        assert "- [ ] Implement feature" in content
-        assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in content
-        assert "collapsed:: true" not in content
-
-    with open(os.path.join(output_dir, "meeting___notes.md"), "r") as f:
-        content = f.read()
-        assert "# Notes" in content
-        assert "#meeting" in content
-        assert "id::" not in content
-        assert "- [x] Review project timeline" in content
-        assert "{{query" not in content
-        assert "#+BEGIN_SRC" not in content
-        assert "#+END_SRC" not in content
+    # Try both step_1 and step_2 for each page file
+    for page_file in ["project___Build agents.md", "meeting___notes.md"]:
+        if os.path.exists(os.path.join(step_1_dir, page_file)):
+            page_path = os.path.join(step_1_dir, page_file)
+        else:
+            page_path = os.path.join(step_2_dir, page_file)
+        with open(page_path, "r") as f:
+            content = f.read()
+            if page_file == "project___Build agents.md":
+                assert "Agents Doc" in content
+                assert "#project" in content
+                assert "- [ ] Implement feature" in content
+                assert "((abcd1234-5678-90ab-cdef-1234567890ab))" not in content
+                assert "collapsed:: true" not in content
+            if page_file == "meeting___notes.md":
+                assert "# Notes" in content
+                assert "#meeting" in content
+                assert "id::" not in content
+                assert "- [x] Review project timeline" in content
+                assert "{{query" not in content
+                assert "#+BEGIN_SRC" not in content
+                assert "#+END_SRC" not in content
 
     # Clean up
     shutil.rmtree(output_dir)
@@ -246,18 +258,28 @@ def test_full_workspace_conversion(monkeypatch):
         assert not os.path.exists(os.path.join(output_dir, "journals"))
         assert not os.path.exists(os.path.join(output_dir, "pages"))
 
-        # Check that journal files exist and have been processed (flat)
+        # Check that step_1 and step_2 exist
+        step_1_dir = os.path.join(output_dir, "step_1")
+        step_2_dir = os.path.join(output_dir, "step_2")
+        assert os.path.exists(step_1_dir)
+        assert os.path.exists(step_2_dir)
+
+        # Check that journal files exist and have been processed (should be in step_2)
         journal_files = [
             f
-            for f in os.listdir(output_dir)
+            for f in os.listdir(step_2_dir)
             if f.endswith(".md") and re.match(r"\d{4}-\d{2}-\d{2}\.md", f)
         ]
         assert len(journal_files) > 0  # Make sure there's at least one journal file
 
-        # Check that page files exist and have been processed (flat)
+        # Check that page files exist and have been processed (should be in step_1 or step_2)
         page_files = [
             f
-            for f in os.listdir(output_dir)
+            for f in os.listdir(step_1_dir)
+            if f.endswith(".md") and not re.match(r"\d{4}-\d{2}-\d{2}\.md", f)
+        ] + [
+            f
+            for f in os.listdir(step_2_dir)
             if f.endswith(".md") and not re.match(r"\d{4}-\d{2}-\d{2}\.md", f)
         ]
         assert len(page_files) > 0  # Make sure there's at least one page file
@@ -271,7 +293,7 @@ def test_full_workspace_conversion(monkeypatch):
         # Sample check of content transformation
         # Check the first journal file
         if journal_files:
-            first_journal = os.path.join(output_dir, journal_files[0])
+            first_journal = os.path.join(step_2_dir, journal_files[0])
             with open(first_journal, "r") as f:
                 content = f.read()
                 # Should have a date header
@@ -285,28 +307,28 @@ def test_full_workspace_conversion(monkeypatch):
 
         # Check page title formatting
         if page_files:
-            first_page = os.path.join(output_dir, page_files[0])
-            with open(first_page, "r") as f:
-                content = f.read()
-                lines = content.strip().split("\n")
-                # First line should be a markdown header
-                assert lines[0].startswith(
-                    "# "
-                ), "Page doesn't start with a title header"
+            # Try both step_1 and step_2 for each page file
+            for page_file in page_files:
+                if os.path.exists(os.path.join(step_1_dir, page_file)):
+                    page_path = os.path.join(step_1_dir, page_file)
+                else:
+                    page_path = os.path.join(step_2_dir, page_file)
+                with open(page_path, "r") as f:
+                    content = f.read()
+                    lines = content.strip().split("\n")
+                    # First line should be a markdown header
+                    assert lines[0].startswith(
+                        "# "
+                    ), f"Page {page_file} doesn't start with a title header"
 
-                # Look for a file with ___ in its name to check slash formatting
-                special_format_files = [f for f in page_files if "___" in f]
-                if special_format_files:
-                    special_page = os.path.join(output_dir, special_format_files[0])
-                    with open(special_page, "r") as f:
-                        content = f.read()
-                        lines = content.strip().split("\n")
+                    # Look for a file with ___ in its name to check slash formatting
+                    if "___" in page_file:
                         title = lines[0][2:]  # Remove "# " prefix
                         # Now expect no slashes, just flattened title
                         if len(title.split()) > 1:
                             assert (
                                 " " in title
-                            ), f"Title for file with ___ ({special_format_files[0]}) should be space-separated"
+                            ), f"Title for file with ___ ({page_file}) should be space-separated"
 
         print(f"\nConverted workspace created at: {output_dir}")
         print(
