@@ -376,6 +376,17 @@ is
             '# This is a Test: With Some "Quoted Text" It Should Be Converted\n\n'
         )
 
+    def test_backlinks_in_filename_are_removed(self):
+        processor = self.processor(
+            "jira___with [[some backlink]] in title and [[topic___Another One]].md"
+        )
+        content = "Some content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content.startswith(
+            "# With Some Backlink in Title and Topic Another One\n\n"
+        )
+
 
 class TestIndentedBulletPointsProcessor:
     """Tests for the IndentedBulletPointsProcessor class"""

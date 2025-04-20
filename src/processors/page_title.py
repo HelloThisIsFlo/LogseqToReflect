@@ -116,12 +116,26 @@ class PageTitleProcessor(ContentProcessor):
             core = core[0].upper() + core[1:]
         return leading + core + trailing
 
+    def _strip_backlinks(self, text):
+        """Replace any [[...]] with the inner text, flattening underscores and triple underscores inside."""
+
+        def replacer(match):
+            inner = match.group(1)
+            # Flatten underscores and triple underscores inside the backlink
+            inner = inner.replace("___", " ").replace("_", " ")
+            inner = re.sub(r"\s+", " ", inner).strip()
+            return inner
+
+        return re.sub(r"\[\[(.*?)\]\]", replacer, text)
+
     def _format_title_from_filename(self):
-        """Format the title based on the filename without the extension, flattening any hierarchy"""
+        """Format the title based on the filename without the extension, flattening any hierarchy and removing backlinks."""
         base_name = os.path.splitext(self.filename)[0]
         # Decode URL-encoded characters for the title only
         base_name_decoded = urllib.parse.unquote(base_name)
-        parts = re.split(r"___|/|_", base_name_decoded)
+        # Remove backlinks before splitting
+        base_name_no_backlinks = self._strip_backlinks(base_name_decoded)
+        parts = re.split(r"___|/|_", base_name_no_backlinks)
         parts = [p.strip() for p in parts if p.strip()]
         type_found, parts = self._extract_type(parts)
         flat_name = " ".join(parts)
