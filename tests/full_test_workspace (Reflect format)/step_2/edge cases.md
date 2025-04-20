@@ -97,3 +97,18 @@ print("Hello, world!")
 								  # Some comment
 								  #                  some other comment
 									```
+
+## 15. Nested embeds
+- Level 1
+  - Level 2
+    - Level 3
+      - Level 4
+        - Level 5
+					- #### Level 6A
+						- _[ ] Implement authentication system ([[Project Alpha]])_
+						- _[ ] Implement authentication system ([[Project Alpha]])_
+					- #### Level 6B
+						- First conversation
+						  _[ ] Implement authentication system ([[Project Alpha]])_
+						- The next day
+						  _[ ] Implement authentication system ([[Project Alpha]])_

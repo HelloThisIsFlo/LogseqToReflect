@@ -113,3 +113,21 @@ print("Hello, world!")
 								  # Some comment
 								  #                  some other comment
 									```
+
+
+## 15. Nested embeds
+- Level 1
+  - Level 2
+    - Level 3
+      - Level 4
+        - Level 5
+					- #### Level 6A
+					  collapsed:: true
+						- {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}
+						- {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}
+					- #### Level 6B
+					  collapsed:: true
+						- First conversation
+						  {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}
+						- The next day
+						  {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}

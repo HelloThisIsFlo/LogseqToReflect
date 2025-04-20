@@ -251,8 +251,9 @@ class BlockReferencesReplacer(ContentProcessor):
                     formatted_page_name = self._format_page_name_for_link(page_name)
                     modified = True
                     # Extract indentation and context
-                    indentation = len(line) - len(line.lstrip())
-                    indent_spaces = " " * indentation
+                    indent_ws = line[
+                        : len(line) - len(line.lstrip())
+                    ]  # Use original whitespace (tabs or spaces)
                     before_embed = line[: match.start()]
                     after_embed = line[match.end() :]
                     line_content = line.lstrip()
@@ -269,12 +270,12 @@ class BlockReferencesReplacer(ContentProcessor):
                         if is_bullet:
                             # Preserve the bullet point
                             lines[i] = (
-                                f"{indent_spaces}- _{text} ([[{formatted_page_name}]])_{after_embed}"
+                                f"{indent_ws}- _{text} ([[{formatted_page_name}]])_{after_embed}"
                             )
                         else:
                             # Just add the content
                             lines[i] = (
-                                f"{indent_spaces}_{text} ([[{formatted_page_name}]])_{after_embed}"
+                                f"{indent_ws}_{text} ([[{formatted_page_name}]])_{after_embed}"
                             )
         return "\n".join(lines) if modified else content
 
