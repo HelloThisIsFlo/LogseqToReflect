@@ -1,3 +1,3 @@
-# another-tag
+# /another-tag/
 
 #inline-tag

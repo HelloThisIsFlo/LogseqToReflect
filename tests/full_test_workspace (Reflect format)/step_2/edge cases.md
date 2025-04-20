@@ -112,3 +112,7 @@ print("Hello, world!")
 						  _[ ] Implement authentication system ([[Project Alpha]])_
 						- The next day
 						  _[ ] Implement authentication system ([[Project Alpha]])_
+
+## 16. Inline tags
+- this is a test [[/insight/]]
+- I'm wondering XYZ [[/follow-up/]]

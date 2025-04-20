@@ -169,7 +169,7 @@ class LogSeqToReflectConverter:
         tag_dir = os.path.join(self.output_dir, "step_2")
         for tag in TagToBacklinkProcessor.found_tags:
             tag_path = os.path.join(tag_dir, f"{tag}.md")
-            tag_content = f"# {tag}\n\n#inline-tag\n"
+            tag_content = f"# /{tag}/\n\n#inline-tag\n"
             if not self.dry_run:
                 with open(tag_path, "w", encoding="utf-8") as f:
                     f.write(tag_content)

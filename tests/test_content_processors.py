@@ -615,6 +615,29 @@ class TestWikiLinkProcessor:
         assert "[[Hello World]]" in new_content
         assert "[[Issue Tracker]]" in new_content
 
+    def test_preserve_inline_tag_capitalization(self):
+        # Simulate TagToBacklinkProcessor having found 'Insight' and 'Follow-up' as tags
+        TagToBacklinkProcessor.found_tags.clear()
+        TagToBacklinkProcessor.found_tags.update({"Insight", "Follow-up", "mytag"})
+        processor = self.processor()
+        content = "- this is a test [[Insight]]\n- I'm wondering XYZ [[Follow-up]]\n- unrelated [[Some Page]]\n- #MyTag"
+        # Simulate tag to backlink conversion for hashtag
+        content = content.replace("#MyTag", "[[mytag]]")
+        new_content, changed = processor.process(content)
+        # Inline tags and hashtag tags should be lowercased and wrapped with slashes
+        assert "[[/insight/]]" in new_content
+        assert "[[/follow-up/]]" in new_content
+        assert "[[/mytag/]]" in new_content
+        # Non-tag wikilinks should be formatted as usual
+        assert "[[Some Page]]" in new_content
+
+    def test_does_not_reformat_already_slash_tagged(self):
+        processor = self.processor()
+        content = "- this is a test [[/insight/]]\n- another [[/follow-up/]]"
+        new_content, changed = processor.process(content)
+        # Should be unchanged
+        assert new_content == content
+
 
 class TestBlockReferencesReplacer:
     """Tests for the BlockReferencesReplacer class"""
@@ -1162,7 +1185,7 @@ class TestTagToBacklinkProcessor:
         content = "This is a #Brag-Doc entry."
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "This is a [[brag-doc]] entry."
+        assert new_content == "This is a [[/brag-doc/]] entry."
         assert TagToBacklinkProcessor.found_tags == {"brag-doc"}
 
     def test_multiple_tags(self):
@@ -1170,7 +1193,7 @@ class TestTagToBacklinkProcessor:
         content = "#Tag1 and #tag2 and #Tag1 again."
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "[[tag1]] and [[tag2]] and [[tag1]] again."
+        assert new_content == "[[/tag1/]] and [[/tag2/]] and [[/tag1/]] again."
         assert TagToBacklinkProcessor.found_tags == {"tag1", "tag2"}
 
     def test_no_tags(self):
@@ -1186,5 +1209,5 @@ class TestTagToBacklinkProcessor:
         content = "#my_tag and #another-tag."
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "[[my_tag]] and [[another-tag]]."
+        assert new_content == "[[/my_tag/]] and [[/another-tag/]]."
         assert TagToBacklinkProcessor.found_tags == {"my_tag", "another-tag"}

@@ -131,3 +131,7 @@ print("Hello, world!")
 						  {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}
 						- The next day
 						  {{embed ((9c67d4f-831e-6052-d281-ff8aba0a1098))}}
+
+## 16. Inline tags
+- this is a test #insight
+- I'm wondering XYZ #follow-up

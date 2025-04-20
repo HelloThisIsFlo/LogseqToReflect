@@ -1,3 +1,3 @@
-# /my_tag/
+# /insight/
 
 #inline-tag

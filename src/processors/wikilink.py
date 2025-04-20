@@ -2,6 +2,7 @@ from .base import ContentProcessor
 import re
 from typing import List
 import os
+from .tag_to_backlink import TagToBacklinkProcessor
 
 # Use environment variables for config paths if set, else default
 CATEGORIES_DIR = os.path.join(
@@ -123,6 +124,12 @@ class WikiLinkProcessor(ContentProcessor):
     def _format_wikilink(self, match):
         """Format a wikilink match"""
         link_text = match.group(1)
+        # If already in the form /tag/, leave untouched
+        if link_text.startswith("/") and link_text.endswith("/"):
+            return f"[[{link_text}]]"
+        found_tags_lower = {t.lower() for t in TagToBacklinkProcessor.found_tags}
+        if link_text.lower() in found_tags_lower:
+            return f"[[/{link_text.lower()}/]]"
         formatted_text = self._flatten_and_title_case(link_text)
         return f"[[{formatted_text}]]"
 
