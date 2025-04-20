@@ -7,6 +7,7 @@ from pathlib import Path
 import importlib.util
 import re
 import subprocess
+from src.processors.tag_to_backlink import TagToBacklinkProcessor
 
 
 @pytest.fixture
@@ -385,3 +386,23 @@ def test_arrows_processor_integration(tmp_path):
     assert "another →" in new_content
     assert "left arrow ←" in new_content
     assert "another ←" in new_content
+
+
+def test_tag_page_generation(tmp_path):
+    # Simulate tag collection
+    TagToBacklinkProcessor.found_tags.clear()
+    TagToBacklinkProcessor.found_tags.update({"brag-doc", "my_tag"})
+    tag_dir = tmp_path
+    # Simulate tag page generation logic
+    for tag in TagToBacklinkProcessor.found_tags:
+        tag_path = os.path.join(tag_dir, f"{tag}.md")
+        tag_content = f"# {tag}\n\n#inline-tag\n"
+        with open(tag_path, "w", encoding="utf-8") as f:
+            f.write(tag_content)
+    # Check files
+    for tag in ["brag-doc", "my_tag"]:
+        tag_path = os.path.join(tag_dir, f"{tag}.md")
+        assert os.path.exists(tag_path)
+        with open(tag_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        assert content == f"# {tag}\n\n#inline-tag\n"

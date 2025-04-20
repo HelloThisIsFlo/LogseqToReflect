@@ -13,6 +13,7 @@ from ..processors import (
     WikiLinkProcessor,
     DateHeaderProcessor,
     AdmonitionProcessor,
+    TagToBacklinkProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -42,6 +43,7 @@ class JournalFileProcessor(FileProcessor):
                 AdmonitionProcessor(),
                 EmptyContentCleaner(),
                 IndentedBulletPointsProcessor(),
+                TagToBacklinkProcessor(categories_config=categories_config),
                 WikiLinkProcessor(),
                 ArrowsProcessor(),
             ]

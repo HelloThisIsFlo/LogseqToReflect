@@ -18,6 +18,7 @@ from src.file_handlers.directory_walker import DirectoryWalker
 from src.processors.ordered_list_processor import OrderedListProcessor
 from src.processors.arrows_processor import ArrowsProcessor
 from src.processors.admonition_processor import AdmonitionProcessor
+from src.processors.tag_to_backlink import TagToBacklinkProcessor
 
 
 class TestDateHeaderProcessor:
@@ -1079,3 +1080,40 @@ Just a heading
         new_content, changed = processor.process(content)
         assert changed is False
         assert new_content == content
+
+
+class TestTagToBacklinkProcessor:
+    def setup_method(self):
+        TagToBacklinkProcessor.found_tags.clear()
+
+    def test_single_tag(self):
+        processor = TagToBacklinkProcessor()
+        content = "This is a #Brag-Doc entry."
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "This is a [[brag-doc]] entry."
+        assert TagToBacklinkProcessor.found_tags == {"brag-doc"}
+
+    def test_multiple_tags(self):
+        processor = TagToBacklinkProcessor()
+        content = "#Tag1 and #tag2 and #Tag1 again."
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "[[tag1]] and [[tag2]] and [[tag1]] again."
+        assert TagToBacklinkProcessor.found_tags == {"tag1", "tag2"}
+
+    def test_no_tags(self):
+        processor = TagToBacklinkProcessor()
+        content = "No tags here."
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert new_content == content
+        assert TagToBacklinkProcessor.found_tags == set()
+
+    def test_tag_with_underscore_and_dash(self):
+        processor = TagToBacklinkProcessor()
+        content = "#my_tag and #another-tag."
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert new_content == "[[my_tag]] and [[another-tag]]."
+        assert TagToBacklinkProcessor.found_tags == {"my_tag", "another-tag"}
