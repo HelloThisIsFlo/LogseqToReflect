@@ -916,6 +916,16 @@ class TestPropertiesProcessor:
                 assert lines[idx + 2] != ""
                 break
 
+    def test_highlight_bullet_heading_with_background_color(self):
+        processor = PropertiesProcessor()
+        content = (
+            "- #### Highlighted Title in bullet list\n" "  background-color:: yellow\n"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "- #### ==Highlighted Title in bullet list==" in new_content
+        assert "background-color:: yellow" not in new_content
+
 
 class TestArrowsProcessor:
     """Tests for the ArrowsProcessor class."""

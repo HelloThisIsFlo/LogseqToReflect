@@ -27,7 +27,13 @@ class PropertiesProcessor(ContentProcessor):
                     bullet_match = re.match(r"^(\s*-\s*)(.*)$", prev_line)
                     if bullet_match:
                         prefix, content_part = bullet_match.groups()
-                        new_lines[j] = f"{prefix}=={content_part}=="
+                        # Check if content_part starts with heading markers (e.g., '### ')
+                        heading_match = re.match(r"(#+\s+)(.*)$", content_part)
+                        if heading_match:
+                            heading_prefix, heading_text = heading_match.groups()
+                            new_lines[j] = f"{prefix}{heading_prefix}=={heading_text}=="
+                        else:
+                            new_lines[j] = f"{prefix}=={content_part}=="
                         changed = True
                 # Skip this property line
                 changed = True

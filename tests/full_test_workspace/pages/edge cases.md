@@ -25,6 +25,9 @@ tags:: project, urgent
 - [[Super Important Topic]] that should be highlighted
   background-color:: yellow
 
+- #### Highlighted Title in bullet list
+  background-color:: yellow
+
 
 ## 4. Task Hierarchies
 

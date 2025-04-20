@@ -14,6 +14,8 @@
 
 - ==[[Super Important Topic]] that should be highlighted==
 
+- #### ==Highlighted Title in bullet list==
+
 ## 4. Task Hierarchies
 
 - [ ] Parent task

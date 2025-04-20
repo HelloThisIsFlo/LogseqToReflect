@@ -4,7 +4,7 @@
 - [[Implement Tracing Support in Core Platform]]
 	- Started mapping out the different request flow
 		- Had some very nice **breakthroughs**! 😃
-			- ==#### What works:==
+			- #### ==What works:==
 				- Service A
 					- Everything works ✅
 				- Service B
@@ -16,7 +16,7 @@
 							- ... but the second [[Dt Trace Id]] has **all the info we need** 🎉
 				- `resolveData`
 					- This is what's actually called by the internal `fetch_dataset` method
-			- ==#### What doesn't work:==
+			- #### ==What doesn't work:==
 				- The fallback path via `get_fallback_stream?`
 	- I found a lot of `<root span not yet received>` → Will need to follow up with [[Engineer X]]
 - [[Editorial Planning]]
