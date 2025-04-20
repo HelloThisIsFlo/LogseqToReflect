@@ -166,7 +166,7 @@ class LogSeqToReflectConverter:
         self._process_journal_directories(journals_dirs)
         self._process_pages_directories(pages_dirs)
         # --- Tag page generation ---
-        tag_dir = os.path.join(self.output_dir, "step_2")
+        tag_dir = os.path.join(self.output_dir, "step_1")
         for tag in TagToBacklinkProcessor.found_tags:
             tag_path = os.path.join(tag_dir, f"{tag}.md")
             tag_content = f"# /{tag}/\n\n#inline-tag\n"

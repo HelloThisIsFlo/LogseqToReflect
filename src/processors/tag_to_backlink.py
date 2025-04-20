@@ -24,7 +24,7 @@ class TagToBacklinkProcessor(ContentProcessor):
     """
 
     found_tags = set()
-    TAG_PATTERN = re.compile(r"(?<!\\w)#([a-zA-Z0-9\-_]+)")
+    TAG_PATTERN = re.compile(r"(^|\s)#([a-zA-Z0-9\-_]+)")
 
     def __init__(self, categories_config: str = None):
         if categories_config:
@@ -35,16 +35,29 @@ class TagToBacklinkProcessor(ContentProcessor):
 
     def process(self, content):
         changed = False
+        # Split content into code and non-code blocks
+        code_block_pattern = re.compile(r"(\n?)(```|~~~)(.*?)(\2)(.*?)(\2)", re.DOTALL)
+        # We'll use a simpler approach: split on fenced code blocks
+        fenced_pattern = re.compile(r"(```[\s\S]*?```|~~~[\s\S]*?~~~)", re.MULTILINE)
+        parts = fenced_pattern.split(content)
+        result = []
+        for i, part in enumerate(parts):
+            if i % 2 == 1 and (part.startswith("```") or part.startswith("~~~")):
+                # This is a code block, leave untouched
+                result.append(part)
+            else:
+                # This is normal text, apply tag conversion
+                def replacer(match):
+                    prefix = match.group(1)
+                    tag = match.group(2)
+                    tag_lower = tag.lower()
+                    if tag_lower in self.types:
+                        return f"{prefix}#{tag}"  # Leave as-is
+                    TagToBacklinkProcessor.found_tags.add(tag_lower)
+                    nonlocal changed
+                    changed = True
+                    return f"{prefix}[[/{tag_lower}/]]"
 
-        def replacer(match):
-            tag = match.group(1)
-            tag_lower = tag.lower()
-            if tag_lower in self.types:
-                return f"#{tag}"  # Leave as-is
-            TagToBacklinkProcessor.found_tags.add(tag_lower)
-            nonlocal changed
-            changed = True
-            return f"[[/{tag_lower}/]]"
-
-        new_content = self.TAG_PATTERN.sub(replacer, content)
+                result.append(self.TAG_PATTERN.sub(replacer, part))
+        new_content = "".join(result)
         return new_content, changed

@@ -19,6 +19,7 @@ from src.processors.ordered_list_processor import OrderedListProcessor
 from src.processors.arrows_processor import ArrowsProcessor
 from src.processors.admonition_processor import AdmonitionProcessor
 from src.processors.tag_to_backlink import TagToBacklinkProcessor
+import shutil
 
 
 class TestDateHeaderProcessor:
@@ -1177,7 +1178,8 @@ Just a heading
 
 
 class TestTagToBacklinkProcessor:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def clear_found_tags(self):
         TagToBacklinkProcessor.found_tags.clear()
 
     def test_single_tag(self):
@@ -1211,3 +1213,54 @@ class TestTagToBacklinkProcessor:
         assert changed is True
         assert new_content == "[[/my_tag/]] and [[/another-tag/]]."
         assert TagToBacklinkProcessor.found_tags == {"my_tag", "another-tag"}
+
+    def test_does_not_convert_tags_in_code_blocks(self):
+        processor = TagToBacklinkProcessor()
+        content = (
+            "Some text #tag1\n"
+            "```python\n#notatag\nprint('hello #tag2')\n```\n"
+            "More text #tag3\n"
+            "~~~\n#alsonotatag\n~~~\n"
+            "End #tag4"
+        )
+        new_content, changed = processor.process(content)
+        # Only tags outside code blocks should be converted
+        assert "[[/tag1/]]" in new_content
+        assert "[[/tag3/]]" in new_content
+        assert "[[/tag4/]]" in new_content
+        assert "#notatag" in new_content
+        assert "#alsonotatag" in new_content
+        assert "#tag2" in new_content  # inside code block, should not be converted
+
+    def test_does_not_convert_tags_in_links_or_urls(self):
+        processor = TagToBacklinkProcessor()
+        content = (
+            "A link: [see here](#notatag)\n"
+            "A URL: https://example.com/#notatag\n"
+            "In text: #tag1 and text #tag2\n"
+            "At start: #tag3\n"
+            "No space:foo#notatag\n"
+            "With space: foo #tag4"
+        )
+        new_content, changed = processor.process(content)
+        # Only tags with space or start of line should be converted
+        assert "[[/tag1/]]" in new_content
+        assert "[[/tag2/]]" in new_content
+        assert "[[/tag3/]]" in new_content
+        assert "[[/tag4/]]" in new_content
+        assert "#notatag" in new_content  # in link, url, or no space
+
+
+@pytest.fixture(autouse=True, scope="session")
+def clean_test_output():
+    output_dir = "tests/full_test_workspace (Reflect format)/step_2/"
+    if os.path.exists(output_dir):
+        for fname in os.listdir(output_dir):
+            if fname.startswith("tag") and fname.endswith(".md"):
+                os.remove(os.path.join(output_dir, fname))
+    yield
+    # Optionally, clean up again after tests
+    if os.path.exists(output_dir):
+        for fname in os.listdir(output_dir):
+            if fname.startswith("tag") and fname.endswith(".md"):
+                os.remove(os.path.join(output_dir, fname))
