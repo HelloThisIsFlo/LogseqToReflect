@@ -44,3 +44,21 @@ def shared_test_workspace(shared_temp_dir):
                 shutil.copy2(source, dest)
 
     return shared_temp_dir
+
+
+@pytest.fixture(autouse=True, scope="session")
+def clean_tag_files():
+    for step in ["step_1", "step_2"]:
+        output_dir = f"tests/full_test_workspace (Reflect format)/{step}/"
+        if os.path.exists(output_dir):
+            for fname in os.listdir(output_dir):
+                if fname.startswith("tag") and fname.endswith(".md"):
+                    os.remove(os.path.join(output_dir, fname))
+    yield
+    # Clean up again after the session
+    for step in ["step_1", "step_2"]:
+        output_dir = f"tests/full_test_workspace (Reflect format)/{step}/"
+        if os.path.exists(output_dir):
+            for fname in os.listdir(output_dir):
+                if fname.startswith("tag") and fname.endswith(".md"):
+                    os.remove(os.path.join(output_dir, fname))
