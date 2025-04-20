@@ -77,3 +77,23 @@ def sample():
 ## 13. Embedding a block in a page with type
 
 - This is a test _hello test ([[With Some Backlink in Title and Topic Another One]])_ bla bla
+
+## 14. Code blocks with hashtags
+
+```python
+# This is a code block with a hashtag
+print("Hello, world!")
+```
+- Now under a deep nested hierarchy
+  - Level 2
+    - Level 3
+      - Level 4
+        - Level 5
+          - Level 6
+            - Level 7
+              - Level 8
+              	- ```
+                  print("Hello, world!")
+								  # Some comment
+								  #                  some other comment
+									```
