@@ -1,25 +1,24 @@
 # Project Alpha
 
-# Project Alpha
-- Started on [[Feb 1st, 2025]]
-- Lead by [[Jane Smith]]
+- # Project Alpha
+  - Started on [[Feb 1st, 2025]]
+  - Lead by [[Jane Smith]]
 
-## Objectives
-- Create a scalable application for [[Data Analysis]]
-- Implement modern UI with [[React]] and [[Typescript]]
-- Integrate with [[AWS]] services
+- ## Objectives
+  - Create a scalable application for [[Data Analysis]]
+  - Implement modern UI with [[React]] and [[Typescript]]
+  - Integrate with [[AWS]] services
 
-## Team Members
-- [[Jane Smith]] - Project Lead
-- [[John Doe]] - Frontend Developer
-- [[Alice Johnson]] - Backend Developer
-- [[Bob Williams]] - DevOps Engineer
+- ## Team Members
+  - [[Jane Smith]] - Project Lead
+  - [[John Doe]] - Frontend Developer
+  - [[Alice Johnson]] - Backend Developer
+  - [[Bob Williams]] - DevOps Engineer
 
-## Tasks
-- [ ] Set up CI/CD pipeline
-- [x] Create project documentation
-- [ ] Implement authentication system
-
-## Related Projects
-- Parent project: [[Digital Transformation]]
-- See also: _[ ] Implement authentication system ([[Project Alpha]])_
+- ## Tasks
+  - [ ] Set up CI/CD pipeline
+  - [x] Create project documentation
+  - [ ] Implement authentication system
+- ## Related Projects
+  - Parent project: [[Digital Transformation]]
+  - See also: _[ ] Implement authentication system ([[Project Alpha]])_
