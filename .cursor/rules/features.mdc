@@ -1,0 +1,79 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# LogSeq to Reflect Converter
+
+This project converts LogSeq notes into a Reflect-compatible format, handling various transformations and ensuring proper formatting.
+
+## Project Structure
+
+- [src/logseq_to_reflect_converter.py](mdc:src/logseq_to_reflect_converter.py): Main entry point
+- [src/file_handlers/logseq_to_reflect_converter.py](mdc:src/file_handlers/logseq_to_reflect_converter.py): Core conversion logic
+- [src/file_handlers/directory_walker.py](mdc:src/file_handlers/directory_walker.py): Traverses directories to process files
+- [src/processors/](mdc:src/processors/): Contains all content processors
+
+## Key Processors
+
+- [src/processors/page_title.py](mdc:src/processors/page_title.py): Handles title generation from filenames
+- [src/processors/heading_processor.py](mdc:src/processors/heading_processor.py): Converts headings to bulleted format
+- [src/processors/indented_bullet_points.py](mdc:src/processors/indented_bullet_points.py): Manages indentation hierarchy
+- [src/processors/block_references.py](mdc:src/processors/block_references.py): Resolves block references
+- [src/processors/task_cleaner.py](mdc:src/processors/task_cleaner.py): Converts LogSeq tasks to checkboxes
+- [src/processors/wikilink.py](mdc:src/processors/wikilink.py): Handles wiki-style links
+
+## Features in Detail
+
+### 1. Title Generation (Page and File Titles)
+- Extracts titles from filenames: `project_name.md` → `# Project Name`
+- Preserves aliases with special format: `# Main Title // Alias1 // Alias2`
+- Examples in [tests/full_test_workspace/pages/Project Alpha.md](mdc:tests/full_test_workspace/pages/Project Alpha.md)
+
+### 2. Heading Transformation
+- First heading after title gets converted to bullet: `# Heading` → `- # Heading`
+- Maintains hierarchy for subsequent headings: `## Subheading` → `- ## Subheading`
+- Examples in [tests/full_test_workspace (Reflect format)/step_2/2025-02-15.md](mdc:tests/full_test_workspace (Reflect format)/step_2/2025-02-15.md)
+
+### 3. Task Conversion
+- Converts TODO/DONE tasks to checkbox format:
+  - `TODO Task` → `[ ] Task`
+  - `DONE Task` → `[x] Task`
+- Removes LOGBOOK entries and metadata
+- Examples in [tests/test_content_processors.py](mdc:tests/test_content_processors.py)
+
+### 4. Block Reference Handling
+- Collects all block IDs from the workspace
+- Replaces references like `((id))` with actual content and source link
+- Examples in [tests/full_test_workspace/pages/Project Alpha.md](mdc:tests/full_test_workspace/pages/Project Alpha.md)
+
+### 5. Indentation and Bullet Processing
+- Manages proper indentation hierarchy with tabs
+- Preserves code blocks with their internal structure
+- Examples in [tests/full_test_workspace (Reflect format)/step_2/complex_hierarchy.md](mdc:tests/full_test_workspace (Reflect format)/step_2/complex_hierarchy.md)
+
+### 6. Tag Processing and Type Tags
+- Extracts type tags from filenames (repo/jira/etc)
+- Creates tag pages automatically for discovered tags
+- Places tag after title: `# Title` followed by `#type`
+- Examples in [tests/full_test_workspace (Reflect format)/step_1](mdc:tests/full_test_workspace (Reflect format)/step_1)
+
+### 7. Two-Step Import System
+- Creates organized output with two directories:
+  - `step_1/`: Contains alias pages for first import to Reflect
+  - `step_2/`: Contains all regular content for second import
+- Examples in output structure: [tests/full_test_workspace (Reflect format)](mdc:tests/full_test_workspace (Reflect format))
+
+### 8. Special Content Handling
+- Processes LogSeq-specific syntax (admonitions, arrows, etc.)
+- Handles code blocks, file embeds, and other special elements
+- Examples in [tests/full_test_workspace/pages/edge cases.md](mdc:tests/full_test_workspace/pages/edge cases.md)
+
+### Configuration and Customization
+- Supports custom config files in [categories_config/](mdc:categories_config/)
+- Handles capitalization rules via uppercase.txt and lowercase.txt
+- Type recognition via types.txt
+
+## Usage Examples
+- Run converter: `uv run python -m src.logseq_to_reflect_converter --workspace your_logseq_dir`
+- Test features: `uv run pytest` (converts test workspace during integration tests)
