@@ -4,14 +4,11 @@
   - > ## ℹ️ This is a note block containing [[Link]] and - [ ] Task
   - > ## ⚠️ This is a warning block with ![[Image.png]] embedded.
   - > ## ‼️ Important information goes here.
-
 - ## 2. Inline Properties
   - ==Task with inline properties==
-
 - ## 3. Background Color
   - ==[[Super Important Topic]] that should be highlighted==
   - #### ==Highlighted Title in bullet list==
-
 - ## 4. Task Hierarchies
   - [ ] Parent task
     - [ ] Subtask in progress
@@ -23,20 +20,16 @@
     1. Ordered subitem one
   1. Ordered subitem two
   - Back to bullet
-
 - ## 6. Links
   - Markdown link: [Reflect](https://reflect.app)
   - LogSeq link: [[Nonexistent Page]]
   - Link with special chars: [[Complex Page (v2)]]
-
 - ## 7. Attachments/Media
   - Embedding image: ![[Assets Diagram.png]]
   - PDF attachment: [Quarterly Report.pdf](assets/Q1_Report.pdf)
-
 - ## 8. Empty Content After Cleanup
   - Some content
   - Some more content
-
 - ## 9. Special Formatting
   - Inline math: $E = mc^2$
   - Code block:
@@ -104,7 +97,6 @@
       some code
       hello #345
       ```
-
 - ## 17. Add new blocks for code blocks
   - Some code
     - ```python

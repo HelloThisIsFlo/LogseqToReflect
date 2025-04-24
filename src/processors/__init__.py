@@ -14,6 +14,7 @@ from .admonition_processor import AdmonitionProcessor
 from .tag_to_backlink import TagToBacklinkProcessor
 from .code_block_processor import CodeBlockProcessor
 from .heading_processor import HeadingProcessor
+from .empty_line_processor import EmptyLineBetweenBulletsProcessor
 
 __all__ = [
     "LinkProcessor",
@@ -29,4 +30,5 @@ __all__ = [
     "TagToBacklinkProcessor",
     "CodeBlockProcessor",
     "HeadingProcessor",
+    "EmptyLineBetweenBulletsProcessor",
 ]
