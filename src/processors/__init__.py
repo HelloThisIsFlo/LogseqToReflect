@@ -12,3 +12,19 @@ from .properties_processor import PropertiesProcessor
 from .arrows_processor import ArrowsProcessor
 from .admonition_processor import AdmonitionProcessor
 from .tag_to_backlink import TagToBacklinkProcessor
+from .code_block_processor import CodeBlockProcessor
+
+__all__ = [
+    "LinkProcessor",
+    "PropertiesProcessor",
+    "TaskCleaner",
+    "EmptyContentCleaner",
+    "IndentedBulletPointsProcessor",
+    "PageTitleProcessor",
+    "WikiLinkProcessor",
+    "AdmonitionProcessor",
+    "BlockReferencesCleaner",
+    "BlockReferencesReplacer",
+    "TagToBacklinkProcessor",
+    "CodeBlockProcessor",
+]

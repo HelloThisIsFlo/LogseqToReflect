@@ -12,6 +12,7 @@ from ..processors import (
     WikiLinkProcessor,
     AdmonitionProcessor,
     TagToBacklinkProcessor,
+    CodeBlockProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -41,6 +42,7 @@ class PageFileProcessor(FileProcessor):
                 TaskCleaner(),
                 AdmonitionProcessor(),
                 EmptyContentCleaner(),
+                CodeBlockProcessor(),
                 IndentedBulletPointsProcessor(),
                 TagToBacklinkProcessor(categories_config=categories_config),
                 (

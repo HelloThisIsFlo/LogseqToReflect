@@ -3,6 +3,7 @@ import os
 import tempfile
 import re
 from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
+from src.processors.code_block_processor import CodeBlockProcessor
 from src.file_handlers.page_file_processor import PageFileProcessor
 
 
@@ -175,3 +176,67 @@ def example():
             assert (
                 len(spaces_before_some) > 5
             ), f"Not enough spaces preserved before 'some' in '{spaces_preserved_line}'"
+
+    def test_code_block_processor_puts_blocks_in_separate_bullets(self):
+        """Test that code blocks are placed in their own bullet points"""
+        processor = CodeBlockProcessor()
+
+        # Test case 1: Code block within text that should be moved to its own bullet
+        content = """- Level 2
+  - Some other code
+    ```python
+    print("Hello, world!")
+    ```"""
+
+        result, changed = processor.process(content)
+
+        # The code block should now be in its own bullet point
+        assert changed is True
+        assert "  - Some other code\n    - ```python" in result
+
+        # Test case 2: Code block already in its own bullet point
+        content = """- Level 2
+  - Some other code
+  - ```python
+    print("Hello, world!")
+    ```"""
+
+        result, changed = processor.process(content)
+
+        # No change should be made as the code block is already in its own bullet
+        assert changed is False
+        assert result == content
+
+    def test_full_pipeline_with_code_block_in_separate_bullet(self):
+        """Test the full pipeline ensures code blocks are in separate bullets"""
+        processor = PageFileProcessor()
+
+        content = """- Level 1
+  - Level 2
+    - Some text 
+      ```python
+      print("Hello, world!")
+      ```"""
+
+        # Use a temporary directory for the test files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = os.path.join(temp_dir, "test_code_block_bullet.md")
+            output_file = os.path.join(temp_dir, "test_code_block_bullet_output.md")
+
+            # Write the test content
+            with open(input_file, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            # Process the file
+            changed, success = processor.process_file(input_file, output_file)
+            assert success is True
+
+            # Read the processed content
+            with open(output_file, "r", encoding="utf-8") as f:
+                result = f.read()
+                print("\nFull result content:")
+                print(result)
+
+            # Check that the code block is now in its own bullet
+            assert "    - Some text" in result
+            assert "      - ```python" in result  # Code block in its own bullet

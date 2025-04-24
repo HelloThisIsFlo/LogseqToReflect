@@ -142,3 +142,14 @@ print("Hello, world!")
     some code
     hello #345
     ```
+
+## 17. Add new blocks for code blocks
+- Some code
+  ```python
+  print("Hello, world!")
+  ```
+- Level 2
+  - Some other code
+    ```python
+    print("Hello, world!")
+    ```
