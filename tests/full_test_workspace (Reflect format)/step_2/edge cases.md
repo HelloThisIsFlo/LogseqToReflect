@@ -47,9 +47,10 @@
   - [[Page-with-hyphens and Underscores]]
 
 - ## 12. Tasks in headings
-  - [ ] ## Some task
-    - [x] # Another task
-      - [ ] ### One more task
+  - ## Some task
+    - # Another task
+      - ### One more task
+
 - ## 13. Embedding a block in a page with type
   - This is a test _hello test ([[With Some Backlink in Title and Topic Another One]])_ bla bla
 

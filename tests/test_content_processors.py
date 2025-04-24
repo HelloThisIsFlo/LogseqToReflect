@@ -92,10 +92,20 @@ class TestTaskCleaner:
         content = "## TODO First task\n### DONE Second task\n# WAITING Third task\n#### CANCELED Final task"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert "- [ ] ## First task" in new_content
-        assert "- [x] ### Second task" in new_content
-        assert "- [ ] # Third task" in new_content
-        assert "- [x] #### ~~Final task~~" in new_content
+        assert "## First task" in new_content
+        assert "### Second task" in new_content
+        assert "# Third task" in new_content
+        assert "#### Final task" in new_content
+
+    def test_tasks_in_headings_with_bullets(self):
+        processor = TaskCleaner()
+        content = "- ## TODO First task\n- ### DONE Second task\n- # WAITING Third task\n- #### CANCELED Final task"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "- ## First task" in new_content
+        assert "- ### Second task" in new_content
+        assert "- # Third task" in new_content
+        assert "- #### Final task" in new_content
 
 
 class TestLinkProcessor:
@@ -505,7 +515,7 @@ class TestIndentedBulletPointsProcessor:
 
     def test_preserve_indentation_for_headings_with_tasks(self):
         processor = IndentedBulletPointsProcessor()
-        content = "## Main section\n- Regular bullet\n- [ ] ## Task in heading (h2)\n\t- [x] # Nested task heading (h1)\n\t\t- [ ] ### Third level task (h3)\n\t\t\t- [x] #### Fourth level task (h4)\n\t\t\t\t- [ ] ##### Fifth level task (h5)\n\t\t\t\t\t- [x] ###### Sixth level task (h6)"
+        content = "## Main section\n- Regular bullet\n- ## Task in heading (h2)\n\t- # Nested task heading (h1)\n\t\t- ### Third level task (h3)\n\t\t\t- #### Fourth level task (h4)\n\t\t\t\t- ##### Fifth level task (h5)\n\t\t\t\t\t- ###### Sixth level task (h6)"
         new_content, changed = processor.process(content)
         assert (
             changed is False

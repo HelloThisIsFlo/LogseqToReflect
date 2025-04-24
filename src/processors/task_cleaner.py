@@ -22,46 +22,31 @@ class TaskCleaner(ContentProcessor):
         new_content = re.sub(r"- DONE ", "- [x] ", new_content)
         new_content = re.sub(r"- DOING ", "- [ ] ", new_content)
 
-        # Handle tasks in headings (e.g., "## TODO Task")
-        # Check if the line already starts with a bullet before adding one
+        # Remove task keywords from headings (e.g., "## TODO Task" -> "## Task")
+        # For headings that don't start with bullets
         new_content = re.sub(
-            r"^(?!-\s+)(#+)\s+TODO\s+(.*)",
-            r"- [ ] \1 \2",
-            new_content,
-            flags=re.MULTILINE,
-        )
-        new_content = re.sub(
-            r"^(?!-\s+)(#+)\s+DONE\s+(.*)",
-            r"- [x] \1 \2",
-            new_content,
-            flags=re.MULTILINE,
-        )
-        new_content = re.sub(
-            r"^(?!-\s+)(#+)\s+DOING\s+(.*)",
-            r"- [ ] \1 \2",
-            new_content,
-            flags=re.MULTILINE,
-        )
-        new_content = re.sub(
-            r"^(?!-\s+)(#+)\s+WAITING\s+(.*)",
-            r"- [ ] \1 \2",
+            r"^(?!-\s+)(#+)\s+(?:TODO|DONE|DOING|WAITING)\s+(.*)",
+            r"\1 \2",
             new_content,
             flags=re.MULTILINE,
         )
         new_content = re.sub(
             r"^(?!-\s+)(#+)\s+(?:CANCELLED|CANCELED)\s+(.*)",
-            r"- [x] \1 ~~\2~~",
+            r"\1 \2",
             new_content,
             flags=re.MULTILINE,
         )
 
-        # Handle tasks in headings that already have bullets (e.g., "- ## TODO Task")
-        new_content = re.sub(r"-\s+(#+)\s+TODO\s+(.*)", r"- [ ] \1 \2", new_content)
-        new_content = re.sub(r"-\s+(#+)\s+DONE\s+(.*)", r"- [x] \1 \2", new_content)
-        new_content = re.sub(r"-\s+(#+)\s+DOING\s+(.*)", r"- [ ] \1 \2", new_content)
-        new_content = re.sub(r"-\s+(#+)\s+WAITING\s+(.*)", r"- [ ] \1 \2", new_content)
+        # Remove task keywords from headings that already have bullets (e.g., "- ## TODO Task" -> "- ## Task")
         new_content = re.sub(
-            r"-\s+(#+)\s+(?:CANCELLED|CANCELED)\s+(.*)", r"- [x] \1 ~~\2~~", new_content
+            r"-\s+(#+)\s+(?:TODO|DONE|DOING|WAITING)\s+(.*)",
+            r"- \1 \2",
+            new_content,
+        )
+        new_content = re.sub(
+            r"-\s+(#+)\s+(?:CANCELLED|CANCELED)\s+(.*)",
+            r"- \1 \2",
+            new_content,
         )
 
         return new_content, new_content != content
