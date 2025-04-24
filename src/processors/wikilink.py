@@ -124,12 +124,10 @@ class WikiLinkProcessor(ContentProcessor):
     def _format_wikilink(self, match):
         """Format a wikilink match"""
         link_text = match.group(1)
-        # If already in the form /tag/, leave untouched
-        if link_text.startswith("/") and link_text.endswith("/"):
-            return f"[[{link_text}]]"
+        # If the text is already a tag (previously was /tag/ format), leave untouched
         found_tags_lower = {t.lower() for t in TagToBacklinkProcessor.found_tags}
         if link_text.lower() in found_tags_lower:
-            return f"[[/{link_text.lower()}/]]"
+            return f"[[{link_text.lower()}]]"
         formatted_text = self._flatten_and_title_case(link_text)
         return f"[[{formatted_text}]]"
 

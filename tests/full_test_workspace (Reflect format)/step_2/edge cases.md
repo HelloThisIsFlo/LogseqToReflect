@@ -88,8 +88,9 @@
                 _[ ] Implement authentication system ([[Project Alpha]])_
 
 - ## 16. Inline tags
-  - this is a test [[/insight/]]
-  - I'm wondering XYZ [[/follow-up/]]
+  - this is a test [[insight]]
+  - I'm wondering XYZ [[follow-up]]
+  - I'm wondering XYZ [[with-capital_letter]]
 
   - [AMI Catalog on the aws/console](https://eu-west-1.console.aws.amazon.com/ec2/home?AMICatalog&region=eu-west-1#AMICatalog:)
   - Level 1

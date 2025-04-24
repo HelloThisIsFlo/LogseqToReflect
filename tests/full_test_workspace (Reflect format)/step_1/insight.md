@@ -1,3 +1,3 @@
-# /insight/
+# insight
 
 #inline-tag

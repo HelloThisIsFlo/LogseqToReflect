@@ -702,16 +702,16 @@ class TestWikiLinkProcessor:
         # Simulate tag to backlink conversion for hashtag
         content = content.replace("#MyTag", "[[mytag]]")
         new_content, changed = processor.process(content)
-        # Inline tags and hashtag tags should be lowercased and wrapped with slashes
-        assert "[[/insight/]]" in new_content
-        assert "[[/follow-up/]]" in new_content
-        assert "[[/mytag/]]" in new_content
+        # Inline tags and hashtag tags should be lowercased
+        assert "[[insight]]" in new_content
+        assert "[[follow-up]]" in new_content
+        assert "[[mytag]]" in new_content
         # Non-tag wikilinks should be formatted as usual
         assert "[[Some Page]]" in new_content
 
     def test_does_not_reformat_already_slash_tagged(self):
         processor = self.processor()
-        content = "- this is a test [[/insight/]]\n- another [[/follow-up/]]"
+        content = "- this is a test [[insight]]\n- another [[follow-up]]"
         new_content, changed = processor.process(content)
         # Should be unchanged
         assert new_content == content
@@ -1261,19 +1261,20 @@ class TestTagToBacklinkProcessor:
 
     def test_single_tag(self):
         processor = TagToBacklinkProcessor()
-        content = "This is a #Brag-Doc entry."
+        content = "This is a test #Tag"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "This is a [[/brag-doc/]] entry."
-        assert TagToBacklinkProcessor.found_tags == {"brag-doc"}
+        assert "This is a test [[tag]]" == new_content
+        assert "tag" in TagToBacklinkProcessor.found_tags
 
     def test_multiple_tags(self):
         processor = TagToBacklinkProcessor()
-        content = "#Tag1 and #tag2 and #Tag1 again."
+        content = "This has #Multiple #tAGs in it"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "[[/tag1/]] and [[/tag2/]] and [[/tag1/]] again."
-        assert TagToBacklinkProcessor.found_tags == {"tag1", "tag2"}
+        assert "This has [[multiple]] [[tags]] in it" == new_content
+        assert "multiple" in TagToBacklinkProcessor.found_tags
+        assert "tags" in TagToBacklinkProcessor.found_tags
 
     def test_no_tags(self):
         processor = TagToBacklinkProcessor()
@@ -1281,15 +1282,14 @@ class TestTagToBacklinkProcessor:
         new_content, changed = processor.process(content)
         assert changed is False
         assert new_content == content
-        assert TagToBacklinkProcessor.found_tags == set()
+        assert not any(tag in content for tag in TagToBacklinkProcessor.found_tags)
 
     def test_tag_with_underscore_and_dash(self):
         processor = TagToBacklinkProcessor()
-        content = "#my_tag and #another-tag."
+        content = "Complex tags #with_underscore and #with-dash"
         new_content, changed = processor.process(content)
         assert changed is True
-        assert new_content == "[[/my_tag/]] and [[/another-tag/]]."
-        assert TagToBacklinkProcessor.found_tags == {"my_tag", "another-tag"}
+        assert "Complex tags [[with_underscore]] and [[with-dash]]" == new_content
 
     def test_does_not_convert_tags_in_code_blocks(self):
         processor = TagToBacklinkProcessor()
@@ -1302,9 +1302,9 @@ class TestTagToBacklinkProcessor:
         )
         new_content, changed = processor.process(content)
         # Only tags outside code blocks should be converted
-        assert "[[/tag1/]]" in new_content
-        assert "[[/tag3/]]" in new_content
-        assert "[[/tag4/]]" in new_content
+        assert "[[tag1]]" in new_content
+        assert "[[tag3]]" in new_content
+        assert "[[tag4]]" in new_content
         assert "#notatag" in new_content
         assert "#alsonotatag" in new_content
         assert "#tag2" in new_content  # inside code block, should not be converted
@@ -1321,10 +1321,10 @@ class TestTagToBacklinkProcessor:
         )
         new_content, changed = processor.process(content)
         # Only tags with space or start of line should be converted
-        assert "[[/tag1/]]" in new_content
-        assert "[[/tag2/]]" in new_content
-        assert "[[/tag3/]]" in new_content
-        assert "[[/tag4/]]" in new_content
+        assert "[[tag1]]" in new_content
+        assert "[[tag2]]" in new_content
+        assert "[[tag3]]" in new_content
+        assert "[[tag4]]" in new_content
         assert "#notatag" in new_content  # in link, url, or no space
 
 

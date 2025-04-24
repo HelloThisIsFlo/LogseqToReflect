@@ -1,3 +1,3 @@
-# /follow-up/
+# follow-up
 
 #inline-tag

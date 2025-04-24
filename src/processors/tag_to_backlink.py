@@ -56,7 +56,7 @@ class TagToBacklinkProcessor(ContentProcessor):
                     TagToBacklinkProcessor.found_tags.add(tag_lower)
                     nonlocal changed
                     changed = True
-                    return f"{prefix}[[/{tag_lower}/]]"
+                    return f"{prefix}[[{tag_lower}]]"
 
                 result.append(self.TAG_PATTERN.sub(replacer, part))
         new_content = "".join(result)
