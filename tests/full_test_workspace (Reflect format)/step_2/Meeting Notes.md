@@ -25,6 +25,5 @@
     This decision was based on cost analysis and scalability requirements.
     #+END_NOTE
 - ## Query Test
-
 - ## References
   - See [[Project Timeline]] for deadlines

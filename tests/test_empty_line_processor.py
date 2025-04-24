@@ -43,6 +43,11 @@ class TestEmptyLineBetweenBulletsProcessor:
 - Second bullet"""
 
         result, changed = processor.process(content)
+        if result != expected:
+            print("EXPECTED:")
+            print(repr(expected))
+            print("ACTUAL:")
+            print(repr(result))
         assert result == expected
         assert changed is True
 
