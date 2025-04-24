@@ -4,5 +4,6 @@
   "python.testing.pytestEnabled": true,
   "[markdown]": {
     "editor.formatOnSave": false
-  }
+  },
+  "python.languageServer": "None"
 }
