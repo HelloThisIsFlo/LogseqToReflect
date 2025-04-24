@@ -101,57 +101,17 @@ class IndentedBulletPointsProcessor(ContentProcessor):
                     is_section_heading = child.line.strip().startswith("#")
                     is_bullet = trimmed.startswith("- ")
 
-                    # No more bullet promotion logic
-                    if is_section_heading:
-                        output.append(child.line)
-                        # For children, set heading_root=True and heading_root_level=1
-                        output.extend(
-                            process_node(
-                                child,
-                                parent_is_heading=False,
-                                heading_root=True,
-                                heading_root_level=1,
-                                in_code_block=False,
-                            )
+                    # No more bullet promotion or indentation removal logic
+                    output.append(("\t" * child.indent) + child.line)
+                    output.extend(
+                        process_node(
+                            child,
+                            parent_is_heading=False,
+                            heading_root=False,
+                            heading_root_level=0,
+                            in_code_block=False,
                         )
-                    elif heading_root and is_bullet:
-                        # Bullet child of a section, output with (indent - heading_root_level) tabs
-                        bullet_indent = max(child.indent - heading_root_level, 0)
-                        output.append(("\t" * bullet_indent) + trimmed)
-                        output.extend(
-                            process_node(
-                                child,
-                                parent_is_heading=False,
-                                heading_root=True,
-                                heading_root_level=heading_root_level,
-                                in_code_block=False,
-                            )
-                        )
-                    elif heading_root and not is_bullet:
-                        # Non-bullet child of a section, output with (indent - heading_root_level) tabs
-                        prop_indent = max(child.indent - heading_root_level, 0)
-                        output.append(("\t" * prop_indent) + child.line)
-                        output.extend(
-                            process_node(
-                                child,
-                                parent_is_heading=False,
-                                heading_root=True,
-                                heading_root_level=heading_root_level,
-                                in_code_block=False,
-                            )
-                        )
-                    else:
-                        # For all other lines, preserve original indentation
-                        output.append(("\t" * child.indent) + child.line)
-                        output.extend(
-                            process_node(
-                                child,
-                                parent_is_heading=False,
-                                heading_root=False,
-                                heading_root_level=0,
-                                in_code_block=False,
-                            )
-                        )
+                    )
 
                 # Toggle code block state back if this was the end
                 if child.is_code_block_end:

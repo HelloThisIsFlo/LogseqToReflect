@@ -1,34 +1,34 @@
 # Complex Hierarchy
 
 - ## [[What I've Done Today]]
-- [[Implement Tracing Support in Core Platform]]
-	- Started mapping out the different request flow
-		- Had some very nice **breakthroughs**! 😃
-			- #### ==What works:==
-				- Service A
-					- Everything works ✅
-				- Service B
-					- **Caveat:** Client actually does 2 calls
-						- The calls
-							- `fetchMetadata`
-							- `getResponse`
-						- That's why we get 2 [[Dt Trace Id]]s ...
-							- ... but the second [[Dt Trace Id]] has **all the info we need** 🎉
-				- `resolveData`
-					- This is what's actually called by the internal `fetch_dataset` method
-			- #### ==What doesn't work:==
-				- The fallback path via `get_fallback_stream?`
-	- I found a lot of `<root span not yet received>` → Will need to follow up with [[Engineer X]]
-- [[Editorial Planning]]
-	- Met with [[Lead Reviewer]] and we agreed on a timeline
-	- I've already asked [[Contributor A]] for a summary of their work, I'll highlight:
-		- Reporting dashboard
-		- Notification routing
-		- New feature launch (will cover this in a separate post next week)
-		- Maybe:
-			- Mention fix for `ORDER BY` issue
-				- (undecided — depends on scope of bugfixes we include)
-				- Not user-facing, since the affected version isn’t deployed yet
+	- [[Implement Tracing Support in Core Platform]]
+		- Started mapping out the different request flow
+			- Had some very nice **breakthroughs**! 😃
+				- #### ==What works:==
+					- Service A
+						- Everything works ✅
+					- Service B
+						- **Caveat:** Client actually does 2 calls
+							- The calls
+								- `fetchMetadata`
+								- `getResponse`
+							- That's why we get 2 [[Dt Trace Id]]s ...
+								- ... but the second [[Dt Trace Id]] has **all the info we need** 🎉
+					- `resolveData`
+						- This is what's actually called by the internal `fetch_dataset` method
+				- #### ==What doesn't work:==
+					- The fallback path via `get_fallback_stream?`
+		- I found a lot of `<root span not yet received>` → Will need to follow up with [[Engineer X]]
+	- [[Editorial Planning]]
+		- Met with [[Lead Reviewer]] and we agreed on a timeline
+		- I've already asked [[Contributor A]] for a summary of their work, I'll highlight:
+			- Reporting dashboard
+			- Notification routing
+			- New feature launch (will cover this in a separate post next week)
+			- Maybe:
+				- Mention fix for `ORDER BY` issue
+					- (undecided — depends on scope of bugfixes we include)
+					- Not user-facing, since the affected version isn’t deployed yet
 - ### [[Weekly Check-in with Team Lead]]
 	- [x] ~~Set a meeting for discussing the progress on [[Implement Tracing Support in Core Platform]] with the team~~
 		- [[Team Lead]] was quite happy with the initiative

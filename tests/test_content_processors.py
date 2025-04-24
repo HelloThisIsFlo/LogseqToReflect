@@ -484,19 +484,15 @@ class TestIndentedBulletPointsProcessor:
         processor = IndentedBulletPointsProcessor()
         content = "## [[Project Status]]\n\t- Working on [[Feature X]] with [[John Doe]]\n\t- Need to check reference\n\t- Also see [[page/documentation]]"
         new_content, changed = processor.process(content)
-        assert changed is True
-        assert (
-            "## [[Project Status]]\n- Working on [[Feature X]] with [[John Doe]]\n- Need to check reference\n- Also see [[page/documentation]]"
-            == new_content
-        )
+        assert changed is False
+        assert new_content == content
 
     def test_preserve_hierarchy_for_nested_bullet_points(self):
         processor = IndentedBulletPointsProcessor()
         content = "## [[Framework]]\n\t- [[Framework]] is a framework for interfaces\n\t\t- It's a middleware service\n\t\t- It generates interfaces\n\t\t\t- Generates code\n\t- All components use this"
         new_content, changed = processor.process(content)
-        assert changed is True
-        expected = "## [[Framework]]\n- [[Framework]] is a framework for interfaces\n\t- It's a middleware service\n\t- It generates interfaces\n\t\t- Generates code\n- All components use this"
-        assert expected == new_content
+        assert changed is False
+        assert new_content == content
 
     def test_no_change_when_no_indented_bullets(self):
         processor = IndentedBulletPointsProcessor()
@@ -509,9 +505,8 @@ class TestIndentedBulletPointsProcessor:
         processor = IndentedBulletPointsProcessor()
         content = "## First Section\n\t- Top level bullet\n\t\t- Second level\n\t\t\t- Third level\n\n## Second Section\n\t- Another top bullet\n\t\t- Nested bullet"
         new_content, changed = processor.process(content)
-        assert changed is True
-        expected = "## First Section\n- Top level bullet\n\t- Second level\n\t\t- Third level\n\n## Second Section\n- Another top bullet\n\t- Nested bullet"
-        assert expected == new_content
+        assert changed is False
+        assert new_content == content
 
     def test_preserve_indentation_for_headings_with_tasks(self):
         processor = IndentedBulletPointsProcessor()
@@ -540,37 +535,15 @@ class TestIndentedBulletPointsProcessor:
             "\t\t\t\t\t\t\t\t- `getResponse`\n"
             "\t\t\t\t\t\t- That's why we get 2 [[dt/trace id]]s ...\n"
             "\t\t\t\t\t\t\t- ... but the second [[dt/trace id]] has **all the info we need** 🎉\n"
-            "\t\t\t\t\t- `resolveData`\n"
-            "\t\t\t\t\t\t- This is what's actually called by the internal `fetch_dataset` method\n"
+            "\t\t\t\t- `resolveData`\n"
+            "\t\t\t\t\t- This is what's actually called by the internal `fetch_dataset` method\n"
             "\t\t\t\t- #### What doesn't work:\n"
             "\t\t\t\t  background-color:: red\n"
             "\t\t\t\t\t- The fallback path via `get_fallback_stream?`\n"
         )
-        expected = (
-            "## [[What I've done today]]\n"
-            "- [[jira/Implement Tracing Support in Core Platform]]\n"
-            "\t- Started mapping out the different request flow\n"
-            "\t\t- Had some very nice **breakthroughs**! 😃\n"
-            "\t\t\t- #### What works:\n"
-            "\t\t\t  background-color:: green\n"
-            "\t\t\t\t- Service A\n"
-            "\t\t\t\t\t- Everything works ✅\n"
-            "\t\t\t\t- Service B\n"
-            "\t\t\t\t\t- **Caveat:** Client actually does 2 calls\n"
-            "\t\t\t\t\t\t- The calls\n"
-            "\t\t\t\t\t\t\t- `fetchMetadata`\n"
-            "\t\t\t\t\t\t\t- `getResponse`\n"
-            "\t\t\t\t\t- That's why we get 2 [[dt/trace id]]s ...\n"
-            "\t\t\t\t\t\t- ... but the second [[dt/trace id]] has **all the info we need** 🎉\n"
-            "\t\t\t\t- `resolveData`\n"
-            "\t\t\t\t\t- This is what's actually called by the internal `fetch_dataset` method\n"
-            "\t\t\t- #### What doesn't work:\n"
-            "\t\t\t  background-color:: red\n"
-            "\t\t\t\t- The fallback path via `get_fallback_stream?`\n"
-        )
         new_content, changed = processor.process(content)
-        assert changed is True
-        assert new_content == expected
+        assert changed is False
+        assert new_content == content
 
     def test_bullet_with_heading_and_children(self):
         processor = IndentedBulletPointsProcessor()
@@ -594,6 +567,20 @@ class TestIndentedBulletPointsProcessor:
             "\t\t- Request must be submitted 30 days ahead\n"
             "\t\t- Requires approval and standard HR documentation\n"
         )
+        new_content, changed = processor.process(content)
+        assert changed is False  # No change should be made
+        assert new_content == expected
+
+    def test_journal_heading_with_children_preserves_indentation(self):
+        processor = IndentedBulletPointsProcessor()
+        content = (
+            "- ## What I've done today\n"
+            "\t- I've got lots of progress with [[jira/Integrate Some Service]]\n"
+            "\t\t- I understood how context propagation works\n"
+            "\t\t- I'm in the middle of diagnosing the exact issue\n"
+            "\t\t- Lots of experiments w/ [[Splunk]], running locally, etc...\n"
+        )
+        expected = content  # Indentation should be preserved exactly
         new_content, changed = processor.process(content)
         assert changed is False  # No change should be made
         assert new_content == expected
