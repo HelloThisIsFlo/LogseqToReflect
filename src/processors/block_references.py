@@ -1,6 +1,7 @@
 from .base import ContentProcessor
 import re
 import os
+import urllib.parse
 from ..utils import find_markdown_files
 from typing import Dict, Tuple, List, Optional, Match, Pattern
 
@@ -138,6 +139,10 @@ class BlockReferencesReplacer(ContentProcessor):
         # If no title found, use the file name without extension
         base_name = os.path.basename(file_path)
         base_name = os.path.splitext(base_name)[0]
+
+        # URL-decode the filename to handle special characters
+        base_name = urllib.parse.unquote(base_name)
+
         return base_name.replace("_", " ")
 
     def _format_page_name_for_link(self, page_name: str) -> str:

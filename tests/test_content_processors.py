@@ -1006,6 +1006,54 @@ class TestBlockReferencesReplacer:
         # Clean up environment variable
         del os.environ["LOGSEQ2REFLECT_TYPES_PATH"]
 
+    def test_url_encoded_filenames_in_references(self, tmpdir):
+        # Create a temporary page with URL-encoded characters in the filename
+        pages_dir = tmpdir.mkdir("pages")
+        page1_content = """# This is a test: With some "quoted text"
+- This is a test block with special chars
+  id:: abcd1234-5678-90ab-cdef-1234567890ef
+- Another block
+"""
+        # Use URL-encoded filename
+        page1_path = pages_dir.join("This is a test%3A With some %22quoted text%22.md")
+        page1_path.write(page1_content)
+
+        # Create a page that references the block
+        page2_content = """# Reference Page
+- Reference to URL-encoded page: ((abcd1234-5678-90ab-cdef-1234567890ef))
+- Embedded reference: {{embed ((abcd1234-5678-90ab-cdef-1234567890ef))}}
+"""
+        page2_path = pages_dir.join("reference_page.md")
+        page2_path.write(page2_content)
+
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+
+        # Verify the block was collected
+        assert "abcd1234-5678-90ab-cdef-1234567890ef" in replacer.block_map
+        text, page_name = replacer.block_map["abcd1234-5678-90ab-cdef-1234567890ef"]
+
+        # Check that the page name is URL-decoded
+        assert page_name == 'This is a test: With some "quoted text"'
+        assert "%" not in page_name
+
+        # Test replacing in content
+        result, changed = replacer.process(page2_content)
+        assert changed is True
+
+        # Check that references are properly decoded in the output
+        assert (
+            'Reference to URL-encoded page: _This is a test block with special chars ([[This is a test: With some "quoted text"]])_'
+            in result
+        )
+        assert (
+            'Embedded reference: _This is a test block with special chars ([[This is a test: With some "quoted text"]])_'
+            in result
+        )
+        assert "%3A" not in result
+        assert "%22" not in result
+
 
 class TestOrderedListProcessor:
     """Tests for the OrderedListProcessor class"""
