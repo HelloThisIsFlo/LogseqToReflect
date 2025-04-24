@@ -15,13 +15,13 @@ class TestCodeBlocks:
         processor = IndentedBulletPointsProcessor()
 
         content = """
-## Code Example
-```python
-# This is a comment
-def example():
-    # Indented comment
-    return "Hello"
-```"""
+- ## Code Example
+- ```python
+  # This is a comment
+  def example():
+      # Indented comment
+      return "Hello"
+  ```"""
 
         result, changed = processor.process(content)
 
@@ -62,7 +62,7 @@ def example():
           - Level 6
             - Level 7
               - Level 8
-              	- ```
+                - ```
                   print("Hello, world!")
                   # Some comment with intended indentation
                   #                  some other comment with lots of spaces
@@ -80,14 +80,13 @@ def example():
         processor = PageFileProcessor()
 
         content = """
-## Code Example
-
-```python
-# This is a comment
-def example():
-    # Indented comment
-    return "Hello"
-```
+- ## Code Example
+- ```python
+  # This is a comment
+  def example():
+      # Indented comment
+      return "Hello"
+  ```
 
 - Now under a deep nested hierarchy
   - Level 2
@@ -97,12 +96,11 @@ def example():
           - Level 6
             - Level 7
               - Level 8
-              	- ```
+                - ```
                   print("Hello, world!")
                   # Some comment with intended indentation
                   #                  some other comment with lots of spaces
-                  ```
-"""
+                  ```"""
 
         # Use a temporary directory for the test files
         with tempfile.TemporaryDirectory() as temp_dir:
