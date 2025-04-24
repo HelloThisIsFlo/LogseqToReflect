@@ -304,13 +304,16 @@ is
         assert "# Page // First Alias // Second Alias\n\n" in new_content
         assert "alias::" not in new_content
 
-    def test_replace_existing_title(self):
+    def test_preserve_existing_title(self):
         processor = self.processor("new_page.md")
         content = "# Old Title\nSome content"
         new_content, changed = processor.process(content)
         assert changed is True
         assert new_content.startswith("# New Page\n")
-        assert "Old Title" not in new_content
+        # We now preserve the existing heading instead of replacing it
+        assert "# Old Title" in new_content
+        # The title from the filename should come first, followed by the original title
+        assert new_content.index("# New Page") < new_content.index("# Old Title")
 
     def test_uppercase_term_in_title(self):
         processor = self.processor("aws___cli___profile.md")
@@ -388,6 +391,37 @@ is
         assert new_content.startswith(
             "# With Some Backlink in Title and Topic Another One\n\n"
         )
+
+    def test_preserves_h1_heading(self):
+        processor = self.processor("page_with_h1.md")
+        content = "# This H1 heading should be preserved\nSome content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        # The title from filename should be present
+        assert "# Page with H1" in new_content
+        # The original H1 heading should also still be present
+        assert "# This H1 heading should be preserved" in new_content
+        # The original H1 heading should come after the title from the filename
+        assert new_content.index("# Page with H1") < new_content.index(
+            "# This H1 heading should be preserved"
+        )
+
+    def test_preserves_h1_heading_with_type(self):
+        processor = self.processor("repo___page_with_h1.md")
+        content = "# This H1 heading should be preserved\nSome content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        # The title from filename should be present
+        assert "# Page with H1" in new_content
+        # The type tag should be added
+        assert "#repo" in new_content
+        # The original H1 heading should still be present
+        assert "# This H1 heading should be preserved" in new_content
+        # The order should be: title, type tag, original heading
+        title_pos = new_content.index("# Page with H1")
+        type_pos = new_content.index("#repo")
+        heading_pos = new_content.index("# This H1 heading should be preserved")
+        assert title_pos < type_pos < heading_pos
 
 
 class TestIndentedBulletPointsProcessor:
@@ -1249,6 +1283,55 @@ class TestTagToBacklinkProcessor:
         assert "[[/tag3/]]" in new_content
         assert "[[/tag4/]]" in new_content
         assert "#notatag" in new_content  # in link, url, or no space
+
+
+class TestHeadingProcessor:
+    """Tests for the HeadingProcessor class"""
+
+    def test_puts_first_heading_in_bullet(self):
+        from src.processors.heading_processor import HeadingProcessor
+
+        processor = HeadingProcessor()
+        content = "# Page Title\n\n## First Heading\nSome content\n### Subheading"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert (
+            "# Page Title\n\n- ## First Heading\nSome content\n### Subheading"
+            == new_content
+        )
+
+    def test_ignores_already_bulleted_heading(self):
+        from src.processors.heading_processor import HeadingProcessor
+
+        processor = HeadingProcessor()
+        content = "# Page Title\n\n- ## First Heading\nSome content\n### Subheading"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        assert content == new_content
+
+    def test_handles_type_tag(self):
+        from src.processors.heading_processor import HeadingProcessor
+
+        processor = HeadingProcessor()
+        content = "# Page Title\n\n#type\n\n## First Heading\nSome content"
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert (
+            "# Page Title\n\n#type\n\n- ## First Heading\nSome content" == new_content
+        )
+
+    def test_only_affects_first_heading(self):
+        from src.processors.heading_processor import HeadingProcessor
+
+        processor = HeadingProcessor()
+        content = "# Page Title\n\n- ## First Heading\nSome content\n## Second Heading"
+        new_content, changed = processor.process(content)
+        assert changed is False
+        # Second heading should remain unbulleted
+        assert (
+            "# Page Title\n\n- ## First Heading\nSome content\n## Second Heading"
+            == new_content
+        )
 
 
 @pytest.fixture(autouse=True, scope="session")

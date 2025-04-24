@@ -1,5 +1,5 @@
 # Indented Under First Heading
 
-## Heading
+- ## Heading
   - Indented notes
     - Some note

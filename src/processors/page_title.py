@@ -203,24 +203,13 @@ class PageTitleProcessor(ContentProcessor):
         # Insert #<type> tag if type_found
         type_tag_line = f"#{type_found.lower()}" if type_found else None
         first_line = content.strip().split("\n")[0] if content.strip() else ""
-        if first_line.startswith("# "):
-            lines = content.split("\n")
-            lines[0] = title
-            # Remove any blank lines after the title
-            while len(lines) > 1 and lines[1].strip() == "":
-                lines.pop(1)
-            if type_tag_line:
-                # Insert type tag after exactly one blank line
-                lines.insert(1, "")
-                lines.insert(2, type_tag_line)
-                # Remove any extra blank lines after the tag
-                while len(lines) > 3 and lines[3].strip() == "":
-                    lines.pop(3)
-            new_content = "\n".join(lines)
-        else:
-            # Always exactly one blank line after title, and after tag if present
-            new_content = f"{title}\n\n"
-            if type_tag_line:
-                new_content += f"{type_tag_line}\n\n"
-            new_content += f"{content.strip()}"
+
+        # For all cases, always add our title at the top
+        new_content = f"{title}\n\n"
+        if type_tag_line:
+            new_content += f"{type_tag_line}\n\n"
+
+        # Keep the existing content, including any existing H1 headings
+        new_content += f"{content.strip()}"
+
         return new_content, new_content != content

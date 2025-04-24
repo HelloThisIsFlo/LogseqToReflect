@@ -1,4 +1,7 @@
 # Tasks in Headings
+
+- # Tasks in Headings
+
 - [ ] ## Main project setup
   - This is an important task that needs to be completed.
 
@@ -19,4 +22,4 @@
 - [ ] ### Current work in progress
   - This is what we're currently working on.
 
-- [ ] ## Task with ## Multiple # characters 
+- [ ] ## Task with ## Multiple # characters

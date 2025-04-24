@@ -1,6 +1,6 @@
 # Complex Hierarchy
 
-## [[What I've Done Today]]
+- ## [[What I've Done Today]]
 - [[Implement Tracing Support in Core Platform]]
 	- Started mapping out the different request flow
 		- Had some very nice **breakthroughs**! 😃

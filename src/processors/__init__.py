@@ -13,6 +13,7 @@ from .arrows_processor import ArrowsProcessor
 from .admonition_processor import AdmonitionProcessor
 from .tag_to_backlink import TagToBacklinkProcessor
 from .code_block_processor import CodeBlockProcessor
+from .heading_processor import HeadingProcessor
 
 __all__ = [
     "LinkProcessor",
@@ -27,4 +28,5 @@ __all__ = [
     "BlockReferencesReplacer",
     "TagToBacklinkProcessor",
     "CodeBlockProcessor",
+    "HeadingProcessor",
 ]

@@ -1,6 +1,6 @@
 # Empty Lines Between Bullets
 
-## Heading
+- ## Heading
 - hello hello
 - ### Another heading
 	- hello hello
