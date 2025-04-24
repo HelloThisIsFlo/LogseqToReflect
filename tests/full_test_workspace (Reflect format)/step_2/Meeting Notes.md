@@ -20,10 +20,8 @@
       - _[ ] Update roadmap document ([[Meeting Notes]])_
     - Evaluated [[Cloud Providers]]
   - Decisions:
-    #+BEGIN_NOTE
-    The team decided to proceed with the AWS migration in Q2.
-    This decision was based on cost analysis and scalability requirements.
-    #+END_NOTE
+    - > ## ℹ️ The team decided to proceed with the AWS migration in Q2.
+      > _This decision was based on cost analysis and scalability requirements._
 - ## Query Test
 - ## References
   - See [[Project Timeline]] for deadlines

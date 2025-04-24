@@ -31,10 +31,10 @@ created:: [[Feb 15th, 2025]]
     - Evaluated [[cloud providers]]
 
   - Decisions:
-    #+BEGIN_NOTE
-    The team decided to proceed with the AWS migration in Q2.
-    This decision was based on cost analysis and scalability requirements.
-    #+END_NOTE
+    - #+BEGIN_NOTE
+      The team decided to proceed with the AWS migration in Q2.
+      This decision was based on cost analysis and scalability requirements.
+      #+END_NOTE
 
 - ## Query Test
   - {{query (and (page "Meeting") (task TODO))}}
