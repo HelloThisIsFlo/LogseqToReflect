@@ -140,3 +140,6 @@ tags:: project, urgent
 
 - ## 18. Embed from files with url-encoded filename
   - ((e60ce41c-a9a1-4f99-9651-7309e4c84d23))
+
+- ## 19. Embed from journal files
+  - ((174c74b7-ca30-4501-8fb1-2bc5acc91a6e))

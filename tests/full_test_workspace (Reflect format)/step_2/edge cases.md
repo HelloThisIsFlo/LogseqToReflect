@@ -111,3 +111,5 @@
         ```
 - ## 18. Embed from files with url-encoded filename
   - _Hello hello ([[This Is a Test: with Some "quoted Text" It Should Be Converted]])_
+- ## 19. Embed from journal files
+  - _I'm in the middle of diagnosing the exact issue ([[Tue, January 9th, 2024]])_

@@ -1051,6 +1051,36 @@ class TestBlockReferencesReplacer:
         assert "%3A" not in result
         assert "%22" not in result
 
+    def test_journal_backlink_formatting(self, tmpdir):
+        # Create a journal file with a block ID
+        journals_dir = tmpdir.mkdir("journals")
+        journal_content = """# 2024 01 09
+- I'm in the middle of diagnosing the exact issue
+  id:: 174c74b7-ca30-4501-8fb1-2bc5acc91a6e
+"""
+        journal_path = journals_dir.join("2024 01 09.md")
+        journal_path.write(journal_content)
+
+        # Create a page that references the journal block
+        pages_dir = tmpdir.mkdir("pages")
+        page_content = """# Reference Page
+- Reference to journal block: ((174c74b7-ca30-4501-8fb1-2bc5acc91a6e))
+"""
+        page_path = pages_dir.join("reference_page.md")
+        page_path.write(page_content)
+
+        # Initialize and collect blocks
+        replacer = BlockReferencesReplacer()
+        replacer.collect_blocks(str(tmpdir))
+
+        # Test replacing in content
+        result, changed = replacer.process(page_content)
+        assert changed is True
+        # The backlink should use the formatted date
+        assert "((174c74b7-ca30-4501-8fb1-2bc5acc91a6e))" not in result
+        assert "([[2024 01 09]])" not in result  # Should not use raw page name
+        assert "([[Tue, January 9th, 2024]])" in result
+
 
 class TestOrderedListProcessor:
     """Tests for the OrderedListProcessor class"""

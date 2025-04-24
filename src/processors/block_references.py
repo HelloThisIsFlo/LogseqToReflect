@@ -2,7 +2,7 @@ from .base import ContentProcessor
 import re
 import os
 import urllib.parse
-from ..utils import find_markdown_files
+from ..utils import find_markdown_files, DateFormatter
 from typing import Dict, Tuple, List, Optional, Match, Pattern
 
 
@@ -146,7 +146,18 @@ class BlockReferencesReplacer(ContentProcessor):
         return base_name.replace("_", " ")
 
     def _format_page_name_for_link(self, page_name: str) -> str:
-        """Format the page name for use in a link, removing type prefixes if present"""
+        """Format the page name for use in a link, removing type prefixes if present, and formatting journal dates."""
+        from ..utils import DateFormatter
+
+        # Detect journal page names: YYYY MM DD or YYYY-MM-DD
+        journal_match = re.match(
+            r"^(\d{4})[\s\-](\d{2})[\s\-](\d{2})$", page_name.strip()
+        )
+        if journal_match:
+            year, month, day = journal_match.groups()
+            formatted = DateFormatter.format_date_for_header(year, month, day)
+            if formatted:
+                return formatted
         if not self.types:
             return page_name
 
