@@ -117,6 +117,49 @@ class TestLinkProcessor:
         assert "collapsed::" not in new_content
         assert "Text before\nText after" == new_content
 
+    def test_remove_inline_properties(self):
+        processor = LinkProcessor()
+        content = (
+            "- collapsed:: true\n  Some content\n- collapsed:: true Some other content"
+        )
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "collapsed::" not in new_content
+        assert "- Some content\n- Some other content" == new_content
+
+    def test_remove_inline_properties_more_complex_with_other_properties(self):
+        processor = LinkProcessor()
+        content = """
+- ## Hello
+	- ## Hi
+		- ### How are you?
+            - collapsed:: true
+              #+BEGIN_NOTE
+              This note is collapsed
+              #+END_NOTE
+            - collapsed:: true
+              ```shell
+              this code block is collapsed
+              ```
+            - collapsed:: true
+              > [💭]([[wondering]]) This is a collapsed quote
+        """
+
+        new_content, changed = processor.process(content)
+        assert changed is True
+        assert "collapsed::" not in new_content
+
+        # Check that specific content elements are present in the output
+        assert "- ## Hello" in new_content
+        assert "- ## Hi" in new_content
+        assert "- ### How are you?" in new_content
+        assert "#+BEGIN_NOTE" in new_content
+        assert "This note is collapsed" in new_content
+        assert "```shell" in new_content
+        assert "this code block is collapsed" in new_content
+        assert "> [💭]([[wondering]])" in new_content
+        assert "This is a collapsed quote" in new_content
+
     def test_no_change_when_no_properties(self):
         processor = LinkProcessor()
         content = "Regular text without properties"
