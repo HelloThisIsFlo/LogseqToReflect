@@ -60,8 +60,10 @@ tags:: project, urgent
 
 ## 8. Empty Content After Cleanup
 
-- property:: value
-- unused:: remove_me
+- Some content
+  property:: value
+- Some more content
+  unused:: remove_me
 
 ## 9. Special Formatting
 

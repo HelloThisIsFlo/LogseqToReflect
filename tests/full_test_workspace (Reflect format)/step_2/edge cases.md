@@ -44,8 +44,8 @@
 
 ## 8. Empty Content After Cleanup
 
-- property:: value
-- unused:: remove_me
+- Some content
+- Some more content
 
 ## 9. Special Formatting
 
@@ -70,9 +70,9 @@ def sample():
 
 ## 12. Tasks in headings
 
-- ## [ ] Some task
-	- # [x] Another task
-		- ### [ ] One more task
+- [ ] ## Some task
+	- [x] # Another task
+		- [ ] ### One more task
 
 ## 13. Embedding a block in a page with type
 
