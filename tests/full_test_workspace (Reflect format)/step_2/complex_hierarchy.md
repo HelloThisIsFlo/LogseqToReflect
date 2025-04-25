@@ -12,8 +12,8 @@
 							- The calls
 								- `fetchMetadata`
 								- `getResponse`
-							- That's why we get 2 [[Dt Trace Id]]s ...
-								- ... but the second [[Dt Trace Id]] has **all the info we need** 🎉
+							- That's why we get 2 [[DT Trace Id]]s ...
+								- ... but the second [[DT Trace Id]] has **all the info we need** 🎉
 					- `resolveData`
 						- This is what's actually called by the internal `fetch_dataset` method
 				- #### ==What doesn't work:==
