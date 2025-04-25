@@ -20,6 +20,9 @@ from src.processors.arrows_processor import ArrowsProcessor
 from src.processors.admonition_processor import AdmonitionProcessor
 from src.processors.tag_to_backlink import TagToBacklinkProcessor
 import shutil
+from src.processors.first_content_indentation_processor import (
+    FirstContentIndentationProcessor,
+)
 
 
 class TestDateHeaderProcessor:
@@ -1403,53 +1406,44 @@ class TestTagToBacklinkProcessor:
         assert "#notatag" in new_content  # in link, url, or no space
 
 
-class TestHeadingProcessor:
-    """Tests for the HeadingProcessor class"""
+class TestFirstContentIndentationProcessor:
+    """Tests for the FirstContentIndentationProcessor class."""
 
-    def test_puts_first_heading_in_bullet(self):
-        from src.processors.heading_processor import HeadingProcessor
-
-        processor = HeadingProcessor()
-        content = "# Page Title\n\n## First Heading\nSome content\n### Subheading"
+    def test_unindent_first_content_after_title(self):
+        processor = FirstContentIndentationProcessor()
+        content = "# Indentation After Properties\n\n  - Hello hello this is indented\n    - this is also indented"
         new_content, changed = processor.process(content)
+
         assert changed is True
         assert (
-            "# Page Title\n\n- ## First Heading\nSome content\n### Subheading"
+            "# Indentation After Properties\n\n- Hello hello this is indented\n    - this is also indented"
             == new_content
         )
 
-    def test_ignores_already_bulleted_heading(self):
-        from src.processors.heading_processor import HeadingProcessor
-
-        processor = HeadingProcessor()
-        content = "# Page Title\n\n- ## First Heading\nSome content\n### Subheading"
+    def test_no_change_when_no_indentation(self):
+        processor = FirstContentIndentationProcessor()
+        content = "# Indentation After Properties\n\n- Hello hello this is not indented\n  - this is indented"
         new_content, changed = processor.process(content)
+
         assert changed is False
         assert content == new_content
 
-    def test_handles_type_tag(self):
-        from src.processors.heading_processor import HeadingProcessor
-
-        processor = HeadingProcessor()
-        content = "# Page Title\n\n#type\n\n## First Heading\nSome content"
+    def test_leaves_other_indentation_alone(self):
+        processor = FirstContentIndentationProcessor()
+        content = "# Indentation After Properties\n\n- Hello hello this is not indented\n  - this indentation should be preserved"
         new_content, changed = processor.process(content)
-        assert changed is True
-        assert (
-            "# Page Title\n\n#type\n\n- ## First Heading\nSome content" == new_content
-        )
 
-    def test_only_affects_first_heading(self):
-        from src.processors.heading_processor import HeadingProcessor
-
-        processor = HeadingProcessor()
-        content = "# Page Title\n\n- ## First Heading\nSome content\n## Second Heading"
-        new_content, changed = processor.process(content)
         assert changed is False
-        # Second heading should remain unbulleted
-        assert (
-            "# Page Title\n\n- ## First Heading\nSome content\n## Second Heading"
-            == new_content
-        )
+        assert "  - this indentation should be preserved" in new_content
+
+    def test_handles_no_title(self):
+        processor = FirstContentIndentationProcessor()
+        content = "  - Hello hello this is indented\n    - this is also indented"
+        new_content, changed = processor.process(content)
+
+        # No title, so no change should be made
+        assert changed is False
+        assert content == new_content
 
 
 @pytest.fixture(autouse=True, scope="session")

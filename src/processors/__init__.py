@@ -15,6 +15,7 @@ from .tag_to_backlink import TagToBacklinkProcessor
 from .code_block_processor import CodeBlockProcessor
 from .heading_processor import HeadingProcessor
 from .empty_line_processor import EmptyLineBetweenBulletsProcessor
+from .first_content_indentation_processor import FirstContentIndentationProcessor
 
 __all__ = [
     "LinkProcessor",
@@ -31,4 +32,5 @@ __all__ = [
     "CodeBlockProcessor",
     "HeadingProcessor",
     "EmptyLineBetweenBulletsProcessor",
+    "FirstContentIndentationProcessor",
 ]

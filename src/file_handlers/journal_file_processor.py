@@ -15,6 +15,7 @@ from ..processors import (
     DateHeaderProcessor,
     AdmonitionProcessor,
     TagToBacklinkProcessor,
+    FirstContentIndentationProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -50,6 +51,7 @@ class JournalFileProcessor(FileProcessor):
                 WikiLinkProcessor(),
                 ArrowsProcessor(),
                 EmptyLineBetweenBulletsProcessor(),
+                FirstContentIndentationProcessor(),
             ]
         )
         super().__init__(processors, dry_run)
