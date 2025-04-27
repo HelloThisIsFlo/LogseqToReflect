@@ -1,28 +1,30 @@
 import pytest
+import re
 import os
-from src.processors.base import ContentProcessor
-from src.processors.date_header import DateHeaderProcessor
-from src.processors.task_cleaner import TaskCleaner
-from src.processors.link_processor import LinkProcessor
-from src.processors.properties_processor import PropertiesProcessor
-from src.processors.block_references import (
+import tempfile
+import shutil
+from src.processors import (
+    LinkProcessor,
+    PropertiesProcessor,
+    TaskCleaner,
+    EmptyContentCleaner,
+    IndentedBulletPointsProcessor,
+    PageTitleProcessor,
+    WikiLinkProcessor,
+    AdmonitionProcessor,
+    DateHeaderProcessor,
+    HeadingProcessor,
+    TagToBacklinkProcessor,
+    CodeBlockProcessor,
     BlockReferencesCleaner,
     BlockReferencesReplacer,
-)
-from src.processors.page_title import PageTitleProcessor
-from src.processors.indented_bullet_points import IndentedBulletPointsProcessor
-from src.processors.empty_content_cleaner import EmptyContentCleaner
-from src.processors.wikilink import WikiLinkProcessor
-import tempfile
-from src.file_handlers.directory_walker import DirectoryWalker
-from src.processors.ordered_list_processor import OrderedListProcessor
-from src.processors.arrows_processor import ArrowsProcessor
-from src.processors.admonition_processor import AdmonitionProcessor
-from src.processors.tag_to_backlink import TagToBacklinkProcessor
-import shutil
-from src.processors.first_content_indentation_processor import (
     FirstContentIndentationProcessor,
 )
+from src.processors.base import ContentProcessor
+from src.processors.ordered_list_processor import OrderedListProcessor
+from src.processors.arrows_processor import ArrowsProcessor
+from src.processors.empty_line_processor import EmptyLineBetweenBulletsProcessor
+from src.processors.backlink_collector import BacklinkCollector
 
 
 class TestDateHeaderProcessor:
@@ -1444,6 +1446,136 @@ class TestFirstContentIndentationProcessor:
         # No title, so no change should be made
         assert changed is False
         assert content == new_content
+
+
+class TestBacklinkCollector:
+    """Tests for the BacklinkCollector class"""
+
+    @pytest.fixture(autouse=True)
+    def clear_backlinks(self):
+        """Clear backlinks between tests"""
+        BacklinkCollector.clear_backlinks()
+        yield
+        BacklinkCollector.clear_backlinks()
+
+    def test_collect_regular_backlinks(self):
+        """Test collecting regular backlinks"""
+        collector = BacklinkCollector()
+        content = "This is a test with [[some backlink]] and [[another one]]"
+        result, changed = collector.process(content)
+
+        # Content shouldn't be modified
+        assert result == content
+        assert changed is False
+
+        # Backlinks should be collected
+        assert "some backlink" in BacklinkCollector.found_backlinks
+        assert "another one" in BacklinkCollector.found_backlinks
+        assert len(BacklinkCollector.found_backlinks) == 2
+
+    def test_collect_date_backlinks(self):
+        """Test collecting date backlinks"""
+        collector = BacklinkCollector()
+        content = "This references [[2023-01-15]] and [[2022 12 25]]"
+        result, changed = collector.process(content)
+
+        # Content shouldn't be modified
+        assert result == content
+        assert changed is False
+
+        # Date backlinks should be stored in YYYY/MM/DD format
+        assert "2023/01/15" in BacklinkCollector.found_backlinks
+        assert "2022/12/25" in BacklinkCollector.found_backlinks
+        assert "2023-01-15" not in BacklinkCollector.found_backlinks
+        assert "2022 12 25" not in BacklinkCollector.found_backlinks
+
+    def test_handles_formatted_dates(self):
+        """Test that formatted dates are correctly mapped back to YYYY/MM/DD format"""
+        collector = BacklinkCollector()
+
+        # First process a date in raw format to build the mapping
+        collector.process("Meeting on [[2023-05-20]]")
+
+        # Then manually set up the mapping (since the processor doesn't add formatted dates to found_backlinks)
+        formatted_date = "Sat, May 20th, 2023"
+        BacklinkCollector.date_backlinks[formatted_date] = "2023/05/20"
+        BacklinkCollector.found_backlinks.add(formatted_date)
+
+        # Should have both the standardized date and the formatted date in the collection
+        assert "2023/05/20" in BacklinkCollector.found_backlinks
+        assert (
+            formatted_date in BacklinkCollector.found_backlinks
+        )  # It's added but will be transformed on write
+
+        # Check that the date mapping was created
+        assert formatted_date in BacklinkCollector.date_backlinks
+        assert BacklinkCollector.date_backlinks[formatted_date] == "2023/05/20"
+
+    def test_collect_dates_from_workspace(self, tmpdir):
+        """Test collecting dates from journal filenames in a workspace"""
+        # Create test journal directories and files
+        journals_dir = tmpdir.mkdir("journals")
+
+        # Create journal files with dates
+        journal_files = ["2023_01_15.md", "2022-12-25.md", "2024_06_30.md"]
+
+        for filename in journal_files:
+            journals_dir.join(filename).write("# Test journal content")
+
+        # Run the collector
+        BacklinkCollector.collect_dates_from_workspace(str(tmpdir))
+
+        # Get all mappings for inspection
+        date_mappings = BacklinkCollector.date_backlinks
+
+        # Check that date mappings were created - note that the weekday might vary
+        # by timezone in test environments, so we just check that entries exist
+        assert any("January 15th, 2023" in k for k in date_mappings)
+        assert "2023/01/15" in date_mappings.values()
+
+        assert any("December 25th, 2022" in k for k in date_mappings)
+        assert "2022/12/25" in date_mappings.values()
+
+        assert any("June 30th, 2024" in k for k in date_mappings)
+        assert "2024/06/30" in date_mappings.values()
+
+    def test_write_to_file(self, tmpdir):
+        """Test writing backlinks to a file with date format conversion"""
+        collector = BacklinkCollector()
+
+        # Add some regular backlinks
+        collector.process("Testing [[First Link]] and [[Another Link]]")
+
+        # Add a date backlink in raw format
+        collector.process("Meeting on [[2022-10-15]]")
+
+        # Add a formatted date backlink
+        formatted_date = "Sat, October 15th, 2022"
+        BacklinkCollector.date_backlinks[formatted_date] = "2022/10/15"
+        BacklinkCollector.found_backlinks.add(formatted_date)
+
+        # Write to file
+        output_path = os.path.join(tmpdir, "backlinks_test")
+        result = BacklinkCollector.write_to_file(output_path)
+
+        # Check result
+        assert result is True
+        assert os.path.exists(output_path)
+
+        # Read the file and check contents
+        with open(output_path, "r") as f:
+            lines = f.readlines()
+
+        # Should be sorted alphabetically
+        assert len(lines) == 3
+        assert (
+            "2022/10/15\n" in lines
+        )  # Both raw and formatted dates should be converted to YYYY/MM/DD
+        assert "Another Link\n" in lines
+        assert "First Link\n" in lines
+        assert (
+            f"{formatted_date}\n" not in lines
+        )  # The formatted date should not be in the output
 
 
 @pytest.fixture(autouse=True, scope="session")

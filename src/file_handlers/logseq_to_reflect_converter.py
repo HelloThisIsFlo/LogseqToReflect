@@ -2,9 +2,9 @@ import os
 import logging
 from typing import Tuple, List, Dict, Any
 from .directory_walker import DirectoryWalker
-from ..processors.block_references import BlockReferencesReplacer
+from ..processors import BlockReferencesReplacer, TagToBacklinkProcessor
 from ..utils import find_markdown_files
-from ..processors import TagToBacklinkProcessor
+from ..processors.backlink_collector import BacklinkCollector
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -148,6 +148,11 @@ class LogSeqToReflectConverter:
             os.makedirs(self.output_dir, exist_ok=True)
             os.makedirs(os.path.join(self.output_dir, "step_1"), exist_ok=True)
             os.makedirs(os.path.join(self.output_dir, "step_2"), exist_ok=True)
+
+        # Pre-collect dates from the workspace
+        BacklinkCollector.clear_backlinks()
+        BacklinkCollector.collect_dates_from_workspace(self.workspace)
+
         # Collect block references from all files
         self.block_references_replacer.collect_blocks(self.workspace)
         # Find directories to process
@@ -173,6 +178,15 @@ class LogSeqToReflectConverter:
             if not self.dry_run:
                 with open(tag_path, "w", encoding="utf-8") as f:
                     f.write(tag_content)
+
+        # --- Write all backlinks to a file ---
+        if not self.dry_run and BacklinkCollector.found_backlinks:
+            backlinks_file = os.path.join(self.output_dir, "all_backlinks")
+            logger.info(
+                f"Writing {len(BacklinkCollector.found_backlinks)} backlinks to {backlinks_file}"
+            )
+            BacklinkCollector.write_to_file(backlinks_file)
+
         # Return stats for reporting
         return self.stats
 

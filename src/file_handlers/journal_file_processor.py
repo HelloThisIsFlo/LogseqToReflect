@@ -20,6 +20,7 @@ from ..processors import (
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
 from ..processors.empty_line_processor import EmptyLineBetweenBulletsProcessor
+from ..processors.backlink_collector import BacklinkCollector
 from typing import Optional
 
 
@@ -49,6 +50,7 @@ class JournalFileProcessor(FileProcessor):
                 HeadingProcessor(),
                 TagToBacklinkProcessor(categories_config=categories_config),
                 WikiLinkProcessor(),
+                BacklinkCollector(),
                 ArrowsProcessor(),
                 EmptyLineBetweenBulletsProcessor(),
                 FirstContentIndentationProcessor(),
