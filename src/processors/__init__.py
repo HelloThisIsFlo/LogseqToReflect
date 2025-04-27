@@ -16,6 +16,7 @@ from .code_block_processor import CodeBlockProcessor
 from .heading_processor import HeadingProcessor
 from .empty_line_processor import EmptyLineBetweenBulletsProcessor
 from .first_content_indentation_processor import FirstContentIndentationProcessor
+from .image_processor import ImageProcessor
 
 __all__ = [
     "LinkProcessor",
@@ -33,4 +34,5 @@ __all__ = [
     "HeadingProcessor",
     "EmptyLineBetweenBulletsProcessor",
     "FirstContentIndentationProcessor",
+    "ImageProcessor",
 ]

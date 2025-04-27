@@ -15,6 +15,7 @@ from ..processors import (
     CodeBlockProcessor,
     HeadingProcessor,
     FirstContentIndentationProcessor,
+    ImageProcessor,
 )
 from ..processors.ordered_list_processor import OrderedListProcessor
 from ..processors.arrows_processor import ArrowsProcessor
@@ -59,6 +60,7 @@ class PageFileProcessor(FileProcessor):
                 ArrowsProcessor(),
                 EmptyLineBetweenBulletsProcessor(),
                 FirstContentIndentationProcessor(),
+                ImageProcessor(),
             ]
         )
         super().__init__(processors, dry_run)
